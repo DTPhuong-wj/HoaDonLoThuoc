@@ -195,7 +195,7 @@ export const BatchSearchPage: React.FC<BatchSearchPageProps> = ({
           ) : (
             /* Results List */
             <div className="space-y-4">
-              {results.map((batch) => {
+              {results.map((batch, index) => {
                 if (batch.hasInvoice) {
                   /* CASE 1: Đã có hóa đơn */
                   return (
@@ -211,6 +211,9 @@ export const BatchSearchPage: React.FC<BatchSearchPageProps> = ({
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                #{index + 1}
+                              </span>
                               <span className="text-xs font-mono font-bold bg-slate-100 border border-slate-200 text-slate-800 px-2.5 py-0.5 rounded-lg">
                                 {batch.batchNumber}
                               </span>
@@ -338,6 +341,9 @@ export const BatchSearchPage: React.FC<BatchSearchPageProps> = ({
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                #{index + 1}
+                              </span>
                               <span className="text-xs font-mono font-bold bg-slate-100 border border-slate-200 text-slate-800 px-2.5 py-0.5 rounded-lg">
                                 {batch.batchNumber}
                               </span>

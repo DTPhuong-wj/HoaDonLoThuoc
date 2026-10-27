@@ -3,7 +3,7 @@ import { sheetsSyncService } from './sheetsSyncService.js';
 
 export class BatchService {
   /**
-   * Lấy danh sách tất cả các lô thuốc cùng đầy đủ danh mục thuốc và chi phí phát sinh
+   * Lấy danh sách tất cả các lô thuốc cùng số lượng thuốc và tổng tiền
    */
   async getAllBatches() {
     const pool = getPool();
@@ -26,100 +26,89 @@ export class BatchService {
         COALESCE(i.pre_expense_total, 0) AS preExpenseTotal,
         COALESCE(i.expenses_total, 0) AS expensesTotal,
         COALESCE(i.post_expense_total, 0) AS postExpenseTotal,
-        i.notes AS inv_notes
+        (SELECT COUNT(*) FROM invoice_items WHERE invoice_id = i.id) AS itemCount
       FROM batches b
       LEFT JOIN invoices i ON b.id = i.batch_id
       ORDER BY b.import_date DESC, b.created_at DESC
     `);
 
-    const invIds = rows.map((r: any) => r.inv_id).filter(Boolean);
-    const itemsByInv: Record<string, any[]> = {};
-    const expensesByInv: Record<string, any[]> = {};
+    // Lấy chi tiết items và expenses cho tất cả các hóa đơn
+    const invoiceIds = rows.map((r: any) => r.inv_id).filter(Boolean);
+    const itemsByInvoice: Record<string, any[]> = {};
+    const expensesByInvoice: Record<string, any[]> = {};
 
-    if (invIds.length > 0) {
+    if (invoiceIds.length > 0) {
       const [itemRows]: any = await pool.query(
-        `SELECT 
-          id,
-          invoice_id AS invoiceId,
-          medicine_name AS medicineName,
-          specification,
-          unit,
-          quantity,
-          unit_price AS unitPrice,
-          amount,
-          notes
+        `SELECT id, invoice_id, medicine_name, specification, unit, quantity, unit_price, amount, notes 
          FROM invoice_items 
          WHERE invoice_id IN (?) 
-         ORDER BY created_at ASC`,
-        [invIds]
+         ORDER BY id ASC`,
+        [invoiceIds]
       );
       for (const it of itemRows) {
-        if (!itemsByInv[it.invoiceId]) itemsByInv[it.invoiceId] = [];
-        itemsByInv[it.invoiceId].push({
-          ...it,
+        if (!itemsByInvoice[it.invoice_id]) itemsByInvoice[it.invoice_id] = [];
+        itemsByInvoice[it.invoice_id].push({
+          id: it.id,
+          invoiceId: it.invoice_id,
+          medicineName: it.medicine_name,
+          specification: it.specification || '',
+          unit: it.unit,
           quantity: Number(it.quantity) || 0,
-          unitPrice: Number(it.unitPrice) || 0,
+          unitPrice: Number(it.unit_price) || 0,
           amount: Number(it.amount) || 0,
+          notes: it.notes || '',
         });
       }
 
       const [expRows]: any = await pool.query(
-        `SELECT 
-          id,
-          invoice_id AS invoiceId,
-          expense_name AS expenseName,
-          category,
-          amount,
-          notes
+        `SELECT id, invoice_id, expense_name, category, amount, notes 
          FROM expenses 
          WHERE invoice_id IN (?) 
-         ORDER BY created_at ASC`,
-        [invIds]
+         ORDER BY id ASC`,
+        [invoiceIds]
       );
-      for (const e of expRows) {
-        if (!expensesByInv[e.invoiceId]) expensesByInv[e.invoiceId] = [];
-        expensesByInv[e.invoiceId].push({
-          ...e,
-          amount: Number(e.amount) || 0,
+      for (const exp of expRows) {
+        if (!expensesByInvoice[exp.invoice_id]) expensesByInvoice[exp.invoice_id] = [];
+        expensesByInvoice[exp.invoice_id].push({
+          id: exp.id,
+          invoiceId: exp.invoice_id,
+          expenseName: exp.expense_name,
+          category: exp.category,
+          amount: Number(exp.amount) || 0,
+          notes: exp.notes || '',
         });
       }
     }
 
-    return rows.map((r: any) => {
-      const invItems = r.inv_id ? (itemsByInv[r.inv_id] || []) : [];
-      const invExpenses = r.inv_id ? (expensesByInv[r.inv_id] || []) : [];
-
-      return {
-        id: r.id,
-        batchNumber: r.batchNumber,
-        batchName: r.batchName,
-        supplier: r.supplier,
-        importDate: r.importDate,
-        notes: r.notes || '',
-        hasInvoice: Boolean(r.hasInvoice),
-        invoiceId: r.invoiceId,
-        invoiceNumber: r.invoiceNumber,
-        itemCount: invItems.length,
-        preExpenseTotal: Number(r.preExpenseTotal) || 0,
-        expensesTotal: Number(r.expensesTotal) || 0,
-        postExpenseTotal: Number(r.postExpenseTotal) || 0,
-        invoice: r.inv_id
-          ? {
-              id: r.inv_id,
-              invoiceNumber: r.inv_number,
-              invoiceDate: r.inv_date,
-              batchId: r.id,
-              batchNumber: r.batchNumber,
-              preExpenseTotal: Number(r.preExpenseTotal) || 0,
-              expensesTotal: Number(r.expensesTotal) || 0,
-              postExpenseTotal: Number(r.postExpenseTotal) || 0,
-              notes: r.inv_notes || '',
-              items: invItems,
-              expenses: invExpenses,
-            }
-          : undefined,
-      };
-    });
+    return rows.map((r: any) => ({
+      id: r.id,
+      batchNumber: r.batchNumber,
+      batchName: r.batchName,
+      supplier: r.supplier,
+      importDate: r.importDate,
+      notes: r.notes || '',
+      hasInvoice: Boolean(r.hasInvoice),
+      invoiceId: r.invoiceId,
+      invoiceNumber: r.invoiceNumber,
+      itemCount: Number(r.itemCount) || 0,
+      preExpenseTotal: Number(r.preExpenseTotal) || 0,
+      expensesTotal: Number(r.expensesTotal) || 0,
+      postExpenseTotal: Number(r.postExpenseTotal) || 0,
+      invoice: r.inv_id
+        ? {
+            id: r.inv_id,
+            invoiceNumber: r.inv_number,
+            invoiceDate: r.inv_date,
+            batchId: r.id,
+            batchNumber: r.batchNumber,
+            preExpenseTotal: Number(r.preExpenseTotal) || 0,
+            expensesTotal: Number(r.expensesTotal) || 0,
+            postExpenseTotal: Number(r.postExpenseTotal) || 0,
+            items: itemsByInvoice[r.inv_id] || [],
+            expenses: expensesByInvoice[r.inv_id] || [],
+          }
+        : undefined,
+    }));
   }
 
   /**

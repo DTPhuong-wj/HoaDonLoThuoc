@@ -81,7 +81,7 @@ export const ExpensesListPage: React.FC<ExpensesListPageProps> = ({
       totalGoodsAmount += b.preExpenseTotal;
       totalExpensesAmount += b.expensesTotal;
 
-      b.invoice.expenses.forEach((exp) => {
+      (b.invoice.expenses || []).forEach((exp) => {
         allExpenses.push({
           ...exp,
           batchId: b.id,
@@ -262,6 +262,7 @@ export const ExpensesListPage: React.FC<ExpensesListPageProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80 uppercase text-[11px]">
+                  <th className="py-3.5 px-3 text-center w-12">STT</th>
                   <th className="py-3.5 px-4">Khoản chi phí</th>
                   <th className="py-3.5 px-4">Danh mục</th>
                   <th className="py-3.5 px-4">Số lô liên kết</th>
@@ -272,12 +273,15 @@ export const ExpensesListPage: React.FC<ExpensesListPageProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredExpenses.map((exp) => {
+                {filteredExpenses.map((exp, index) => {
                   const catInfo = CATEGORY_MAP[exp.category] || CATEGORY_MAP.other;
                   const Icon = catInfo.icon;
 
                   return (
                     <tr key={exp.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-3 text-center font-semibold text-slate-500 whitespace-nowrap">
+                        {index + 1}
+                      </td>
                       <td className="py-3.5 px-4">
                         <span className="font-bold text-slate-800 text-xs block">
                           {exp.expenseName}

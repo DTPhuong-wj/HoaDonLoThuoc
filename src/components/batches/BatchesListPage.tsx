@@ -186,6 +186,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/90 text-slate-600 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[11px]">
+                  <th className="py-3.5 px-3 text-center w-12">STT</th>
                   <th className="py-3.5 px-4">Số lô</th>
                   <th className="py-3.5 px-4">Tên thuốc / Mô tả</th>
                   <th className="py-3.5 px-4">Nhà cung cấp</th>
@@ -198,11 +199,16 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredBatches.map((batch) => (
+                {filteredBatches.map((batch, index) => (
                   <tr
                     key={batch.id}
                     className="hover:bg-slate-50/80 transition-colors group"
                   >
+                    {/* STT */}
+                    <td className="py-3.5 px-3 text-center font-semibold text-slate-500 whitespace-nowrap">
+                      {index + 1}
+                    </td>
+
                     {/* Số lô */}
                     <td className="py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap">
                       <span className="px-2.5 py-1 bg-slate-100 group-hover:bg-emerald-50 rounded-lg border border-slate-200 group-hover:border-emerald-200 font-mono text-xs transition-colors">
@@ -330,7 +336,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
 
           {/* Mobile / Tablet Card View (Strictly Responsive, No horizontal overflow!) */}
           <div className="block lg:hidden space-y-3.5">
-            {filteredBatches.map((batch) => (
+            {filteredBatches.map((batch, index) => (
               <div
                 key={batch.id}
                 className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3"
@@ -339,6 +345,9 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                 <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                        #{index + 1}
+                      </span>
                       <span className="font-mono font-bold text-xs bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200 text-slate-800">
                         {batch.batchNumber}
                       </span>

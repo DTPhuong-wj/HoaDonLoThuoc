@@ -557,13 +557,16 @@ export const BatchDetailView: React.FC<BatchDetailViewProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {expenses.map((exp) => (
+                {expenses.map((exp, index) => (
                   <div
                     key={exp.id}
                     className="p-4 bg-amber-50/30 rounded-2xl border border-amber-200/80 flex items-start justify-between gap-3"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-200">
+                          #{index + 1}
+                        </span>
                         <Tag size={13} className="text-amber-600" />
                         <h4 className="font-bold text-xs sm:text-sm text-slate-800">
                           {exp.expenseName}

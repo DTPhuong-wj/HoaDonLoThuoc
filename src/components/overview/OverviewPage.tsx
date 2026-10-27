@@ -225,6 +225,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 font-semibold">
+                <th className="py-3 px-3 text-center w-12">STT</th>
                 <th className="py-3 px-4">Số lô</th>
                 <th className="py-3 px-4">Tên thuốc / Số loại</th>
                 <th className="py-3 px-4">Ngày nhập</th>
@@ -235,11 +236,16 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {recentBatches.map((batch) => (
+              {recentBatches.map((batch, index) => (
                 <tr
                   key={batch.id}
                   className="hover:bg-slate-50/70 transition-colors group"
                 >
+                  {/* STT */}
+                  <td className="py-3.5 px-3 text-center font-semibold text-slate-500 whitespace-nowrap">
+                    {index + 1}
+                  </td>
+
                   {/* Số lô */}
                   <td className="py-3.5 px-4 font-bold text-slate-800">
                     <span className="px-2.5 py-1 bg-slate-100 rounded-lg border border-slate-200 font-mono text-xs">
@@ -322,13 +328,18 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
 
         {/* Mobile Card List View (No horizontal scrolling!) */}
         <div className="block md:hidden divide-y divide-slate-100">
-          {recentBatches.map((batch) => (
+          {recentBatches.map((batch, index) => (
             <div key={batch.id} className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="px-2 py-0.5 bg-slate-100 rounded-md border border-slate-200 font-mono text-xs font-bold text-slate-800">
-                    {batch.batchNumber}
-                  </span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                      #{index + 1}
+                    </span>
+                    <span className="px-2 py-0.5 bg-slate-100 rounded-md border border-slate-200 font-mono text-xs font-bold text-slate-800">
+                      {batch.batchNumber}
+                    </span>
+                  </div>
                   <h4 className="font-bold text-slate-800 text-sm mt-1">
                     {batch.batchName}
                   </h4>

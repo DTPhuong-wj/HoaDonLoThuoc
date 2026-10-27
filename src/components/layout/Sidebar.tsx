@@ -197,12 +197,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }`}
           >
             <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
-              NA
+              MT
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-slate-800 truncate">
-                  DS. Nguyễn Văn An
+                  Vũ Mai Thanh
                 </p>
                 <p className="text-[11px] text-emerald-700 truncate font-medium">
                   Quản lý kho dược

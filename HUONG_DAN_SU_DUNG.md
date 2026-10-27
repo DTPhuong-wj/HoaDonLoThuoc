@@ -237,52 +237,36 @@ Hệ thống đã được cấu hình mở (`0.0.0.0`), cho phép các máy tí
 
 ---
 
-## 6. Hướng dẫn thiết lập Đồng bộ hai chiều với Google Sheets
+## 6. Hướng dẫn thiết lập Đồng bộ 1 chiều tự động sang Google Sheets (1 Sheet duy nhất)
 
-Hệ thống hỗ trợ đồng bộ hai chiều tự động:
-- Khi thao tác trên Web -> Dữ liệu lưu vào MySQL -> Tự động đồng bộ lên Google Sheets.
-- Khi chỉnh sửa trực tiếp trên Google Sheets -> Dữ liệu tự động cập nhật về MySQL.
+Hệ thống hỗ trợ đồng bộ 1 chiều tự động từ MySQL sang Google Sheets:
+- Khi thao tác trên Web/MySQL (thêm, sửa hoặc xóa dữ liệu) -> Dữ liệu trong MySQL tự động đồng bộ ngay lập tức sang Google Sheets.
+- Toàn bộ dữ liệu hiển thị trên **1 Sheet duy nhất** (`HoaDonLoThuoc`) bao gồm Lô thuốc, Hóa đơn, Danh mục thuốc và Phụ phí.
+- Cột STT (Cột A) tự động đánh số tăng dần liên tục (1, 2, 3...) sau mỗi lần thêm/xóa.
+- **Không cần cài đặt trigger phức tạp, không cần tunnel/ngrok**.
 
-### Bước 6.1: Cài đặt Google Apps Script & Tự động tạo 4 Sheet chuẩn
+### Bước 6.1: Cài đặt Google Apps Script & Khởi tạo Sheet tổng hợp duy nhất
 1. Truy cập [Google Sheets](https://sheets.new) để tạo 1 bảng tính mới (đặt tên ví dụ: `HoaDonLoThuoc_DongBo`).
 2. Bấm menu **Tiện ích mở rộng (Extensions)** -> **Apps Script**.
-3. Xóa toàn bộ mã mặc định trong file `Code.gs`.
+3. Xóa toàn bộ mã mặc định trong trình soạn thảo.
 4. Mở file mã nguồn đã chuẩn bị sẵn trong dự án:
    [server/scripts/googleAppsScript.js](file:///d:/Code/donthuoc_CT/server/scripts/googleAppsScript.js)
 5. Sao chép toàn bộ mã trong file trên và dán vào cửa sổ Apps Script.
-6. Chỉnh sửa 2 dòng cấu hình ở đầu file script:
-   ```javascript
-   const BACKEND_API_URL = "http://192.168.1.47:5000/api/sync/from-sheets"; // Địa chỉ IP máy tính chạy Backend
-   const SYNC_SECRET_TOKEN = "mint_pharma_secure_sync_secret_token_2026";
-   ```
-7. Bấm biểu tượng **Lưu (Save)**.
-8. Quay lại Google Sheet và tải lại trang web (F5). Bạn sẽ thấy xuất hiện menu mới trên thanh công cụ:
-   **🏥 MintPharma DB** -> Bấm chọn **"1. Tự động tạo 4 Sheet chuẩn theo MySQL"**.
-   Hệ thống sẽ tự động tạo đủ 4 tab với màu sắc và tiêu đề chuẩn 100% theo MySQL:
-   - **`LoThuoc`**: Tương ứng bảng `batches` (Số lô, tên thuốc, nhà cung cấp, ngày nhập, tiền trước/sau chi phí).
-   - **`HoaDon`**: Tương ứng bảng `invoices` (Số HĐ, ngày HĐ, tiền thuốc, chi phí phát sinh, tổng thanh toán).
-   - **`DanhSachThuoc`**: Tương ứng bảng `invoice_items` (Mã HĐ, tên thuốc, quy cách, số lượng, đơn giá, thành tiền).
-   - **`ChiPhiPhatSinh`**: Tương ứng bảng `expenses` (Mã HĐ, tên chi phí, phân loại, số tiền).
+6. Bấm biểu tượng **Lưu (Save)** (`Ctrl + S`).
+7. Quay lại Google Sheet và tải lại trang web (F5). Bạn sẽ thấy xuất hiện menu mới trên thanh công cụ:
+   **🏥 MintPharma DB** -> Bấm chọn **"1. Khởi tạo Bảng tổng hợp duy nhất"**.
+   Hệ thống sẽ tự động tạo tab **`HoaDonLoThuoc`** với màu sắc và tiêu đề chuẩn gồm 16 cột (STT, Số Lô, Tên Lô, NCC, Ngày Nhập, Trạng Thái HĐ, Số HĐ, Ngày HĐ, Danh Mục Thuốc, Tiền Hàng, Chi Phí, Tổng Tiền, Chi Tiết Chi Phí, Ghi Chú, Mã ID, Cập Nhật Lúc).
 
-### Bước 6.2: Thiết lập Trigger tự động gửi thay đổi về MySQL
-1. Ở cột menu bên trái của Apps Script, bấm biểu tượng chiếc đồng hồ **Kích hoạt (Triggers)**.
-2. Bấm nút **+ Thêm trình kích hoạt (Add Trigger)** ở góc dưới bên phải.
-3. Cấu hình:
-   - *Chọn hàm để chạy*: `onSpreadsheetEdit`
-   - *Chọn nguồn sự kiện*: `Từ bảng tính (From spreadsheet)`
-   - *Chọn loại sự kiện*: `Khi chỉnh sửa (On edit)`
-4. Bấm **Lưu (Save)** và cấp quyền truy cập tài khoản Google khi được hỏi.
-
-### Bước 6.3: Triển khai Web App (Deploy Web App)
+### Bước 6.2: Triển khai Web App (Deploy Web App)
 1. Ở góc trên bên phải màn hình Apps Script, bấm nút **Triển khai (Deploy)** -> **Tùy chọn triển khai mới (New deployment)**.
 2. Chọn loại: **Ứng dụng web (Web app)**.
 3. Cấu hình:
-   - *Mô tả*: `MintPharma Sync Webhook`
+   - *Mô tả*: `MintPharma 1-Way Sync`
    - *Thực thi dưới dạng (Execute as)*: `Tôi (Me)`
    - *Người có quyền truy cập (Who has access)*: `Bất kỳ ai (Anyone)`
 4. Bấm **Triển khai (Deploy)** và sao chép đường dẫn **URL ứng dụng web** (Web app URL có dạng: `https://script.google.com/macros/s/AKfycb.../exec`).
 
-### Bước 6.4: Kích hoạt đồng bộ trong `.env` của Backend
+### Bước 6.3: Kích hoạt đồng bộ trong `.env` của Backend
 Mở file `.env` trên máy chủ và cập nhật các dòng sau:
 ```env
 GOOGLE_SHEETS_SYNC_ENABLED=true
@@ -291,15 +275,16 @@ SHEETS_SYNC_SECRET=mint_pharma_secure_sync_secret_token_2026
 ```
 Sau đó khởi động lại Backend (`npm run server` hoặc `npm run full`).
 
-### Bước 6.5: Kiểm tra đồng bộ hai chiều
-1. **Chiều Web -> Google Sheets**:
-   - Thêm 1 lô mới trên web.
-   - Mở Google Sheet tab `LoThuoc`: dòng mới tự động xuất hiện với đầy đủ thông tin số lô, nhà cung cấp và ngày nhập!
-2. **Chiều Google Sheets -> MySQL**:
-   - Trong Google Sheet tab `LoThuoc`, bạn sửa tên nhà cung cấp hoặc ghi chú của một lô.
-   - Google Apps Script sẽ gửi thông báo về webhook backend.
-   - Backend xác thực token bảo mật, kiểm tra chống vòng lặp (Anti-loop) và cập nhật dữ liệu vào bảng `batches` trong MySQL!
-   - Tải lại trang web hoặc kiểm tra MySQL Workbench: dữ liệu đã được cập nhật chính xác!
+### Bước 6.4: Kiểm tra đồng bộ tự động
+1. **Thêm lô thuốc mới trên Web**:
+   - Thêm 1 lô mới trên web (ví dụ `LO-2026-001`).
+   - Mở Google Sheet tab `HoaDonLoThuoc`: dòng mới tự động xuất hiện với STT `1`.
+2. **Cập nhật hóa đơn & chi phí**:
+   - Lập hóa đơn và thêm chi phí cho lô thuốc trên web.
+   - Google Sheet tự động điền danh mục thuốc, tiền hàng và phụ phí tương ứng.
+3. **Xóa dòng**:
+   - Xóa một lô thuốc trên web.
+   - Dòng đó trên Google Sheet tự động bị xóa và STT (Cột A) tự động đánh lại số liên tục từ 1.
 
 ---
 
