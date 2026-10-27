@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --mint-50: #f2fbf6;
+    --mint-100: #e2f6ec;
+    --mint-200: #c5edd9;
+    --mint-500: #10b981;
+    --mint-600: #059669;
+    --mint-700: #047857;
+    --mint-800: #065f46;
+    --mint-900: #064e3b;
+    --mint-dark: #0f291e;
+  }
+
+  body {
+    background-color: #f6fbf8;
+    color: #1e293b;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Soft Mint Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f8f4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a7dfc5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
