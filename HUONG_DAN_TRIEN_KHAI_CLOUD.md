@@ -77,54 +77,67 @@
 
 ## 🚀 3. QUY TRÌNH 4 BƯỚC TRIỂN KHAI THỰC TẾ
 
-### BƯỚC 1: TẠO MYSQL DATABASE TRÊN CLOUD & NẠP DỮ LIỆU
-Bạn có thể chọn một trong các nhà cung cấp MySQL Cloud miễn phí tốt nhất:
-- **Lựa chọn hàng đầu: [Aiven for MySQL](https://aiven.io/)** (Gói Free tier miễn phí 5GB, đầy đủ SSL/TLS, cực kỳ ổn định).
-- **Hoặc [TiDB Cloud](https://tidbcloud.com/)** (Tương thích 100% MySQL, miễn phí vĩnh viễn 5GB Serverless).
-- **Hoặc [Railway](https://railway.app/)** (Cung cấp MySQL 1-click có connection string dạng `DATABASE_URL`).
+### BƯỚC 1: TẠO MYSQL DATABASE TRÊN CLOUD & NẠP DỮ LIỆU (KHÔNG CẦN THẺ)
+Khuyên dùng **[TiDB Cloud](https://tidbcloud.com/)**:
+- **100% KHÔNG CẦN THẺ NGÂN HÀNG (NO CREDIT CARD)**: Chỉ cần đăng nhập bằng GitHub hoặc Google.
+- Miễn phí vĩnh viễn 5GB lưu trữ (Đầy đủ SSL/TLS, tương thích 100% chuẩn MySQL, tốc độ rất cao).
 
 #### Các bước thực hiện:
-1. Đăng ký tài khoản tại [aiven.io](https://aiven.io/) hoặc [tidbcloud.com](https://tidbcloud.com/).
-2. Tạo một dịch vụ mới: **MySQL** (chọn khu vực gần Việt Nam như Singapore `ap-southeast-1`).
-3. Sau khi tạo xong, bạn sẽ nhận được thông tin kết nối gồm:
-   - **Host** (ví dụ: `mysql-xxxx.aivencloud.com`)
-   - **Port** (ví dụ: `12345`)
-   - **User** (ví dụ: `avnadmin`)
-   - **Password** (mật khẩu ngẫu nhiên được cấp)
-   - **Database Name** (ví dụ: `defaultdb` hoặc `HoaDonLoThuoc`)
-   - Hoặc chuỗi **Service URI / DATABASE_URL**: `mysql://avnadmin:pass@mysql-xxxx.aivencloud.com:12345/defaultdb?ssl-mode=REQUIRED`
-4. **Nhập schema và dữ liệu từ máy lên Cloud**:
+1. Truy cập [tidbcloud.com](https://tidbcloud.com/), bấm **Sign In** -> Đăng nhập bằng tài khoản **GitHub**.
+2. Chọn tạo cụm database: **Serverless** (Free $0/tháng). Chọn khu vực: **Singapore (AWS)**.
+3. Bấm **Create Cluster**. Sau vài giây, bảng điều khiển hiện thông tin kết nối:
+   - Bấm nút **Connect** ở góc trên bên phải.
+   - Chọn loại: **General** hoặc **Node.js**.
+   - Sao chép thông tin: **Host**, **Port (4000)**, **User**, **Password**, **Database Name** (mặc định là `test` hoặc bạn tạo `HoaDonLoThuoc`).
+4. **Nhập dữ liệu từ máy lên TiDB Cloud**:
    - Mở **MySQL Workbench** trên máy tính của bạn.
-   - Bấm dấu `+` để tạo kết nối mới, điền Host, Port, User, Password của MySQL Cloud (trong tab *SSL* chọn *Require*).
+   - Bấm dấu `+` tạo kết nối mới:
+     - *Hostname*: Điền Host của TiDB (dạng `gateway01.ap-southeast-1.prod.aws.tidbcloud.com`).
+     - *Port*: `4000`
+     - *Username*: Điền User của TiDB.
+     - *Password*: Bấm *Store in Vault* và dán mật khẩu.
+     - Trong tab *SSL*: Chọn *Require*.
+   - Bấm **Test Connection** -> Bấm **OK**.
    - Mở file backup đã chuẩn bị sẵn trong thư mục dự án:  
      [`backups/HoaDonLoThuoc_latest.sql`](file:///d:/Code/donthuoc_CT/backups/HoaDonLoThuoc_latest.sql)
-   - Bấm nút hình tia sét ⚡ (Execute) để chạy toàn bộ file SQL. Sau 5 giây, tất cả 6 bảng dữ liệu đã có mặt trên Cloud!
+   - Bấm nút tia sét ⚡ (Execute) để chạy toàn bộ file SQL. Sau 5 giây, tất cả 6 bảng dữ liệu đã có mặt trên Cloud!
 
 ---
 
-### BƯỚC 2: TRIỂN KHAI BACKEND LÊN CLOUD SERVER (RENDER / RAILWAY)
-Khuyên dùng **[Render.com](https://render.com/)** vì hỗ trợ Dockerfile sẵn có trong dự án, miễn phí và kết nối trực tiếp với GitHub:
+### BƯỚC 2: TRIỂN KHAI BACKEND LÊN CLOUD VỚI VERCEL (100% MIỄN PHÍ & KHÔNG CẦN THẺ)
+**[Vercel](https://vercel.com/)** là nền tảng điện toán đám mây serverless số 1 thế giới (hãng phát triển Next.js, định giá hàng tỷ USD), cực kỳ ổn định, sống lâu dài, **hoàn toàn miễn phí và không bao giờ yêu cầu thẻ tín dụng**.
 
-1. Đăng nhập [render.com](https://render.com/), bấm nút **New +** -> Chọn **Web Service**.
-2. Chọn kết nối với kho lưu trữ GitHub của bạn: `DTPhuong-wj/HoaDonLoThuoc`.
-3. Điền cấu hình:
-   - **Name**: `hoadonlothuoc-api`
-   - **Region**: `Singapore` (để tốc độ về Việt Nam nhanh nhất)
-   - **Language / Runtime**: **Docker** (Render sẽ tự động dùng file `Dockerfile` đã tạo sẵn)
-   - **Instance Type**: **Free**
-4. Trong mục **Environment Variables** (Biến môi trường), thêm các biến sau:
-   - `PORT`: `5000`
-   - `HOST`: `0.0.0.0`
-   - `DATABASE_URL`: *(Dán chuỗi kết nối MySQL Cloud từ Bước 1)*
-   - `DB_SSL`: `true`
-   - `CORS_ORIGIN`: `*`
-   - `GOOGLE_SHEETS_SYNC_ENABLED`: `true`
-   - `SHEETS_SYNC_SECRET`: `mint_pharma_secure_sync_secret_token_2026`
-   - `GOOGLE_APPS_SCRIPT_URL`: *(Sẽ điền ở Bước 4)*
-5. Bấm **Create Web Service**.
-6. Render sẽ tự động build Docker và khởi chạy server. Sau 1-2 phút, bạn sẽ có URL Backend Cloud công khai dạng:
-   `https://hoadonlothuoc-api.onrender.com`
-   *(Kiểm tra bằng cách mở trình duyệt vào link `https://hoadonlothuoc-api.onrender.com/api/health` thấy báo `"status": "ONLINE"` là thành công 100%)*.
+Dự án đã được tích hợp sẵn 2 file chuẩn hóa cho Vercel:
+- [`api/index.ts`](file:///d:/Code/donthuoc_CT/api/index.ts): Tự động chuyển tiếp request vào Backend Express.
+- [`vercel.json`](file:///d:/Code/donthuoc_CT/vercel.json): Cấu hình định tuyến API `/api/*`.
+
+#### Các bước triển khai trên Vercel:
+1. Truy cập [vercel.com](https://vercel.com/) -> Bấm **Sign Up** (hoặc **Log In**) -> Chọn **Continue with GitHub** (Hoàn toàn không hỏi thẻ ngân hàng).
+2. Sau khi đăng nhập, tại trang Dashboard, bấm nút **Add New...** (góc trên bên phải) -> Chọn **Project**.
+3. Tại danh sách repository GitHub, tìm `DTPhuong-wj/HoaDonLoThuoc` và bấm **Import**.
+4. Màn hình **Configure Project** xuất hiện:
+   - **Project Name**: Để mặc định (hoặc đặt tên ví dụ: `hoadonlothuoc-api`).
+   - **Framework Preset**: Chọn **Other**.
+   - **Root Directory**: Để trống (`./`).
+5. Mở rộng mục **Environment Variables** (Biến môi trường) và thêm các biến sau:
+
+| Tên biến (Key) | Giá trị (Value) | Lấy ở đâu? |
+| :--- | :--- | :--- |
+| **`DB_HOST`** | `gateway01.ap-southeast-1.prod.aws.tidbcloud.com` (ví dụ) | **Lấy từ TiDB Cloud:** Bấm nút **Connect** trên cụm TiDB -> Xem dòng **Host**. |
+| **`DB_PORT`** | `4000` | Cổng kết nối của TiDB Cloud (mặc định luôn là `4000`). |
+| **`DB_USER`** | `xxxx.root` (ví dụ) | **Lấy từ TiDB Cloud:** Bấm nút **Connect** -> Xem dòng **User**. |
+| **`DB_PASSWORD`** | *(Mật khẩu cụm TiDB)* | **Lấy từ TiDB Cloud:** Mật khẩu hiển thị lúc tạo cụm hoặc bấm *Reset Password* để tạo mới. |
+| **`DB_NAME`** | `test` | Tên database mặc định trên TiDB Cloud (hoặc tên database bạn tạo). |
+| **`DB_SSL`** | `true` | Bắt buộc là `true` để Vercel kết nối an toàn có mã hóa tới TiDB Cloud. |
+| **`CORS_ORIGIN`** | `*` | Cho phép Cloudflare Pages gọi API. |
+| **`GOOGLE_SHEETS_SYNC_ENABLED`** | `true` | Kích hoạt tính năng đồng bộ Google Sheets. |
+| **`SHEETS_SYNC_SECRET`** | `mint_pharma_secure_sync_secret_token_2026` | Token bảo mật đồng bộ giữa Backend và Google Apps Script. |
+| **`GOOGLE_APPS_SCRIPT_URL`** | *(Sẽ cập nhật ở Bước 4 sau khi có URL Apps Script)* | Tạm thời có thể để trống hoặc điền sau. |
+
+6. Bấm nút **Deploy** màu xanh.
+7. Vercel sẽ tự động build trong khoảng 30–45 giây. Khi hoàn tất, Vercel sẽ hiển thị màn hình chúc mừng kèm đường link Backend chính thức:
+   👉 **`https://hoadonlothuoc-api.vercel.app`**  
+   *(Kiểm tra bằng cách mở link: `https://hoadonlothuoc-api.vercel.app/api/health` thấy báo `"status": "ONLINE"` và `"connected": true` là hoàn tất 100%)*.
 
 ---
 
@@ -140,7 +153,7 @@ Khuyên dùng **[Render.com](https://render.com/)** vì hỗ trợ Dockerfile s�
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
 5. Trong mục **Environment variables (advanced)**, thêm biến:
-   - **`BACKEND_API_URL`**: `https://hoadonlothuoc-api.onrender.com` *(URL của Backend Cloud từ Bước 2)*
+   - **`BACKEND_API_URL`**: `https://hoadonlothuoc-api.vercel.app` *(URL của Backend Cloud từ Bước 2)*
 6. Bấm **Save and Deploy**.
 7. Cloudflare Pages sẽ tự động biên dịch và triển khai lên hàng trăm máy chủ Edge toàn cầu.
    Sau khi hoàn tất, bạn sẽ nhận được đường link website chính thức dạng:  
@@ -158,7 +171,7 @@ Khuyên dùng **[Render.com](https://render.com/)** vì hỗ trợ Dockerfile s�
    dán đè vào trình soạn thảo Apps Script.
 3. Chỉnh sửa dòng 34 với URL Backend Cloud của bạn:
    ```javascript
-   const BACKEND_API_URL = "https://hoadonlothuoc-api.onrender.com";
+   const BACKEND_API_URL = "https://hoadonlothuoc-api.vercel.app";
    ```
 4. Bấm **Lưu (Ctrl + S)**.
 5. Triển khai Web App:

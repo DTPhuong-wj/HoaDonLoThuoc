@@ -106,13 +106,17 @@ async function startServer() {
     console.error('================================================================');
   }
 
-  app.listen(env.PORT, env.HOST, () => {
-    console.log(`[Server] Backend API đang chạy tại: http://${env.HOST}:${env.PORT}`);
-    console.log(`[Server] Trạng thái Database: ${dbConnected ? 'ĐÃ KẾT NỐI MySQL (' + env.DB_NAME + ')' : 'CHƯA KẾT NỐI (Chờ cập nhật .env)'}`);
-    console.log(`[Server] Khách trong mạng LAN / Tailscale có thể truy cập qua cổng: ${env.PORT}`);
-    console.log(`[Server] Health check: http://localhost:${env.PORT}/api/health`);
-    console.log('================================================================');
-  });
+  if (process.env.VERCEL !== '1') {
+    app.listen(env.PORT, env.HOST, () => {
+      console.log(`[Server] Backend API đang chạy tại: http://${env.HOST}:${env.PORT}`);
+      console.log(`[Server] Trạng thái Database: ${dbConnected ? 'ĐÃ KẾT NỐI MySQL (' + env.DB_NAME + ')' : 'CHƯA KẾT NỐI (Chờ cập nhật .env)'}`);
+      console.log(`[Server] Khách trong mạng LAN / Tailscale có thể truy cập qua cổng: ${env.PORT}`);
+      console.log(`[Server] Health check: http://localhost:${env.PORT}/api/health`);
+      console.log('================================================================');
+    });
+  }
 }
 
 startServer();
+
+export { app };
