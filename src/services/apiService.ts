@@ -1,6 +1,7 @@
 import type { Batch, BatchWithInvoice, BatchStatistics, Invoice, InvoiceItem, ExpenseItem } from '../types/pharmacy';
 
-const API_BASE_URL = '/api';
+// Tự động sử dụng biến môi trường VITE_API_URL khi build production hoặc dùng proxy /api mặc định
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 export class ApiService {
   /**

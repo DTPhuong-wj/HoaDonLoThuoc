@@ -13,7 +13,7 @@ const app = express();
 
 // 1. Middlewares cơ bản
 app.use(cors({
-  origin: '*', // Cho phép kết nối từ máy tính khác trong mạng nội bộ / Tailscale
+  origin: env.CORS_ORIGIN === '*' ? '*' : env.CORS_ORIGIN.split(',').map(s => s.trim()),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Sync-Token'],
 }));

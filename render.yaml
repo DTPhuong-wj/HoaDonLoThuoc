@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: hoadonlothuoc-api
+    runtime: docker
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        sync: false # Nhập connection string từ Cloud MySQL (Aiven/TiDB/Clever/Railway)
+      - key: DB_SSL
+        value: "true"
+      - key: CORS_ORIGIN
+        value: "*" # Hoặc điền domain Cloudflare Pages của bạn
+      - key: GOOGLE_SHEETS_SYNC_ENABLED
+        value: "true"
+      - key: GOOGLE_APPS_SCRIPT_URL
+        sync: false # Nhập URL Apps Script
+      - key: SHEETS_SYNC_SECRET
+        value: mint_pharma_secure_sync_secret_token_2026

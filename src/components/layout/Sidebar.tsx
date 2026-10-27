@@ -92,18 +92,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 bg-white border-r border-emerald-100/80 flex flex-col transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-20' : 'w-64'
-        } ${
-          isOpenMobile ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-40 bg-white border-r border-emerald-100/80 flex flex-col transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'
+          } ${isOpenMobile ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         {/* Logo & Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-emerald-50">
           <div
-            className={`flex items-center gap-3 cursor-pointer ${
-              isCollapsed ? 'justify-center w-full' : ''
-            }`}
+            className={`flex items-center gap-3 cursor-pointer ${isCollapsed ? 'justify-center w-full' : ''
+              }`}
             onClick={() => handleNavClick('overview')}
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
@@ -149,17 +146,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={() => handleNavClick(item.id)}
                 title={isCollapsed ? item.label : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                  isActive
-                    ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-xs border border-emerald-200/60'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                } ${isCollapsed ? 'justify-center px-0' : ''}`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${isActive
+                  ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-xs border border-emerald-200/60'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  } ${isCollapsed ? 'justify-center px-0' : ''}`}
               >
                 <Icon
                   size={20}
-                  className={`shrink-0 transition-colors ${
-                    isActive ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'
-                  }`}
+                  className={`shrink-0 transition-colors ${isActive ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'
+                    }`}
                 />
                 {!isCollapsed && (
                   <span className="flex-1 text-left truncate">{item.label}</span>
@@ -181,10 +176,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="mx-3 mb-3 p-3 bg-emerald-50/60 rounded-xl border border-emerald-100/70 text-xs text-slate-600">
             <div className="flex items-center gap-2 text-emerald-800 font-semibold mb-1">
               <Building2 size={15} />
-              <span>Kho Dược Trung Tâm</span>
+              <span>Lương cao</span>
             </div>
             <p className="text-[11px] text-slate-500">
-              Chi nhánh Cần Thơ • Chuẩn GPP
+              Manifest
             </p>
           </div>
         )}
@@ -192,9 +187,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* User & Footer */}
         <div className="p-3 border-t border-emerald-50 bg-slate-50/60">
           <div
-            className={`flex items-center gap-3 ${
-              isCollapsed ? 'justify-center' : ''
-            }`}
+            className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''
+              }`}
           >
             <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
               MT
@@ -217,9 +211,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={onResetDemo}
               title="Khôi phục lại dữ liệu mẫu ban đầu"
-              className={`text-xs text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
-                isCollapsed ? 'w-full justify-center' : ''
-              }`}
+              className={`text-xs text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${isCollapsed ? 'w-full justify-center' : ''
+                }`}
             >
               <RotateCcw size={14} />
               {!isCollapsed && <span>Dữ liệu mẫu</span>}

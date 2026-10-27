@@ -1,40 +1,50 @@
 /**
  * ====================================================================
- * GOOGLE APPS SCRIPT: ĐỒNG BỘ 1 CHIỀU TỰ ĐỘNG TỪ MYSQL SANG GOOGLE SHEETS
- * Dự án: MintPharma - Quản lý Hóa đơn Lô thuốc
+ * GOOGLE APPS SCRIPT: ĐỒNG BỘ HAI CHIỀU CLOUD GIỮA MYSQL VÀ GOOGLE SHEETS
+ * Dự án: MintPharma - Quản lý Hóa đơn Lô thuốc (HoaDonLoThuoc)
  * ====================================================================
  * 
- * ĐẶC ĐIỂM:
- *  - CHỈ DÙNG 1 SHEET DUY NHẤT: Bảng tổng hợp toàn bộ thông tin Lô thuốc, Hóa đơn, Thuốc & Chi phí.
- *  - ĐỒNG BỘ 1 CHIỀU TỰ ĐỘNG: Khi MySQL thêm mới, chỉnh sửa hoặc xóa thì Google Sheets tự cập nhật ngay.
- *  - CỘT STT TỰ ĐỘNG ĐÁNH LẠI LIÊN TỤC (1, 2, 3...) sau mỗi lần thêm/xóa.
- *  - KHÔNG CẦN CÀI ĐẶT TRIGGER PHỨC TẠP! KHÔNG CẦN NGROK HAY TUNNEL!
+ * ĐẶC ĐIỂM HỆ THỐNG CLOUD:
+ *  - 1 SHEET TỔNG HỢP DUY NHẤT (`HoaDonLoThuoc`): Xem và quản lý toàn bộ dữ liệu.
+ *  - ĐỒNG BỘ 2 CHIỀU TỰ ĐỘNG KHÔNG CẦN BẬT MÁY TÍNH CÁ NHÂN:
+ *      + Luồng 1 (MySQL Cloud -> Google Sheets): Khi web app thêm/sửa/xóa,
+ *        Backend Cloud tự động gọi Webhook này để cập nhật Sheets.
+ *      + Luồng 2 (Google Sheets -> MySQL Cloud): Khi chỉnh sửa trên Google Sheets,
+ *        Trình kích hoạt onEdit tự động gửi dữ liệu về Backend Cloud để lưu vào MySQL.
+ *  - CỘT STT (Cột A) TỰ ĐỘNG ĐÁNH LẠI LIÊN TỤC 1, 2, 3... không bị nhảy số.
+ *  - SỬ DỤNG ID HỆ THỐNG ỔN ĐỊNH (Cột O): Không dùng STT làm định danh.
+ *  - CƠ CHẾ CHỐNG VÒNG LẶP (Anti-loop) & IDEMPOTENCY: Đảm bảo dữ liệu nhất quán.
  * 
- * HƯỚNG DẪN CÀI ĐẶT 2 BƯỚC:
+ * HƯỚNG DẪN CÀI ĐẶT:
  * --------------------------------------------------------------------
  * 1. Mở một Google Spreadsheet bất kỳ.
- * 2. Bấm menu: Tiện ích mở rộng (Extensions) -> Apps Script.
- *    Xóa hết mã mặc định và dán toàn bộ file này vào. Bấm Lưu (Ctrl + S).
- * 3. Triển khai Web App:
- *    - Bấm nút "Triển khai" (Deploy) ở góc trên bên phải -> "Tùy chọn triển khai mới" (New deployment).
- *    - Chọn loại: "Ứng dụng web" (Web app).
- *    - Mô tả: "MintPharma 1-Way Sync".
+ * 2. Bấm: Tiện ích mở rộng (Extensions) -> Apps Script.
+ *    Xóa toàn bộ mã mặc định và dán toàn bộ file này vào.
+ * 3. Điền URL Backend Cloud của bạn vào biến BACKEND_API_URL bên dưới (dòng 34).
+ * 4. Bấm "Triển khai" (Deploy) -> "Tùy chọn triển khai mới" (New deployment):
+ *    - Loại: "Ứng dụng web" (Web app).
+ *    - Mô tả: "MintPharma Cloud Sync".
  *    - Thực thi dưới dạng: "Tôi" (Me).
  *    - Ai có quyền truy cập: "Bất kỳ ai" (Anyone).
- *    - Bấm "Triển khai" (Deploy) và sao chép "URL ứng dụng web".
- * 4. Dán URL ứng dụng web vào file `.env` ở Backend:
- *    GOOGLE_SHEETS_SYNC_ENABLED=true
- *    GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/AKfycb.../exec
- * 
- * Quay lại Google Sheets, bạn sẽ thấy menu: "🏥 MintPharma DB"
- * Bấm: "1. Khởi tạo Bảng tổng hợp duy nhất" để định dạng tiêu đề và màu sắc chuẩn!
+ *    - Sao chép URL ứng dụng web dán vào biến GOOGLE_APPS_SCRIPT_URL ở Backend Cloud.
+ * 5. Thiết lập Trigger cho chiều ngược lại (Google Sheets -> MySQL):
+ *    - Bấm biểu tượng Đồng hồ (Triggers) ở menu bên trái Apps Script.
+ *    - Bấm "+ Thêm trình kích hoạt" (Add Trigger).
+ *    - Hàm để chạy: onSpreadsheetEdit.
+ *    - Nguồn sự kiện: Từ bảng tính (From spreadsheet).
+ *    - Loại sự kiện: Khi chỉnh sửa (On edit).
+ *    - Bấm Lưu.
  * ====================================================================
  */
+
+// 1. CẤU HÌNH KẾT NỐI CLOUD
+// Điền địa chỉ Backend Cloud của bạn (ví dụ: https://hoadonlothuoc-api.onrender.com hoặc domain Cloudflare)
+const BACKEND_API_URL = "https://YOUR_BACKEND_CLOUD_DOMAIN";
 
 // Tên Sheet duy nhất dùng để quản lý toàn bộ dữ liệu
 const SHEET_NAME = "HoaDonLoThuoc";
 
-// Khóa bí mật (Khớp với SHEETS_SYNC_SECRET trong file .env của Backend)
+// Khóa bí mật (Khớp với SHEETS_SYNC_SECRET trong biến môi trường của Backend)
 const SYNC_SECRET_TOKEN = "mint_pharma_secure_sync_secret_token_2026";
 
 /**
@@ -44,6 +54,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🏥 MintPharma DB')
     .addItem('1. Khởi tạo Bảng tổng hợp duy nhất', 'setupSingleSheet')
+    .addItem('2. Đồng bộ dòng đang chọn về MySQL Cloud', 'syncActiveRowToMySQL')
     .addToUi();
 }
 
@@ -60,22 +71,22 @@ function setupSingleSheet() {
   
   // Thiết lập tiêu đề các cột chuẩn
   const headers = [
-    "STT",
-    "Số Lô",
-    "Tên Lô Thuốc",
-    "Nhà Cung Cấp",
-    "Ngày Nhập Kho",
-    "Trạng Thái HĐ",
-    "Số Hóa Đơn",
-    "Ngày Hóa Đơn",
-    "Danh Mục Thuốc Trong Lô",
-    "Tiền Hàng Trước CP",
-    "Chi Phí Phát Sinh",
-    "Tổng Tiền Sau CP",
-    "Chi Tiết Chi Phí Phát Sinh",
-    "Ghi Chú",
-    "Mã ID Lô (Hệ thống)",
-    "Cập Nhật Lúc"
+    "STT",                        // Cột 1 (A)
+    "Số Lô",                      // Cột 2 (B)
+    "Tên Lô Thuốc",               // Cột 3 (C)
+    "Nhà Cung Cấp",               // Cột 4 (D)
+    "Ngày Nhập Kho",              // Cột 5 (E)
+    "Trạng Thái HĐ",              // Cột 6 (F)
+    "Số Hóa Đơn",                 // Cột 7 (G)
+    "Ngày Hóa Đơn",               // Cột 8 (H)
+    "Danh Mục Thuốc Trong Lô",    // Cột 9 (I)
+    "Tiền Hàng Trước CP",         // Cột 10 (J)
+    "Chi Phí Phát Sinh",          // Cột 11 (K)
+    "Tổng Tiền Sau CP",           // Cột 12 (L)
+    "Chi Tiết Chi Phí Phát Sinh", // Cột 13 (M)
+    "Ghi Chú",                    // Cột 14 (N)
+    "Mã ID Lô (Hệ thống)",        // Cột 15 (O)
+    "Cập Nhật Lúc"                // Cột 16 (P)
   ];
 
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -98,17 +109,19 @@ function setupSingleSheet() {
   sheet.getRange("F:F").setHorizontalAlignment("center");
   sheet.getRange("G:H").setHorizontalAlignment("center");
   sheet.getRange("J:L").setNumberFormat("#,##0 \"đ\"").setHorizontalAlignment("right");
+  sheet.getRange("O:O").setFontFamily("monospace").setFontSize(9).setFontColor("#64748b");
 
   SpreadsheetApp.getUi().alert(
     "KHỞI TẠO THÀNH CÔNG!",
-    "Đã thiết lập bảng dữ liệu tổng hợp duy nhất `HoaDonLoThuoc`.\nTừ bây giờ, mọi thay đổi từ MySQL sẽ tự động đồng bộ vào đây!",
+    "Đã thiết lập bảng dữ liệu tổng hợp duy nhất `HoaDonLoThuoc`.\nTừ bây giờ, mọi thay đổi từ MySQL Cloud sẽ tự động đồng bộ vào đây!",
     SpreadsheetApp.getUi().ButtonSet.OK
   );
 }
 
-/**
- * WEBHOOK TIẾP NHẬN DỮ LIỆU TỪ MYSQL SERVER (1 CHIỀU: MySQL -> Google Sheets)
- */
+// ====================================================================
+// LUỒNG 1: MYSQL CLOUD -> GOOGLE SHEETS (TIẾP NHẬN TỪ BACKEND CLOUD)
+// ====================================================================
+
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
@@ -129,7 +142,7 @@ function doPost(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getSheetByName(SHEET_NAME);
     if (!sheet) {
-      sheet = ss.getSheets()[0]; // Lấy sheet đầu tiên nếu chưa đổi tên
+      sheet = ss.getSheets()[0];
     }
 
     if (action === 'DELETE') {
@@ -147,9 +160,6 @@ function doPost(e) {
   }
 }
 
-/**
- * XỬ LÝ THÊM MỚI HOẶC CẬP NHẬT (UPSERT)
- */
 function handleUpsertRecord(sheet, entityType, data) {
   const dataRange = sheet.getDataRange();
   const values = dataRange.getValues();
@@ -191,7 +201,7 @@ function handleUpsertRecord(sheet, entityType, data) {
     }).join("; ");
   }
 
-  // Kiểm tra có hóa đơn chưa
+  // Kiểm tra trạng thái hóa đơn
   const hasInvoice = Boolean(data.hasInvoice || (data.invoiceNumber && data.invoiceNumber !== "—") || data.invoice);
   const invNumber = data.invoiceNumber || (data.invoice ? data.invoice.invoiceNumber : "") || (hasInvoice ? "Đã lập HĐ" : "—");
   const invDate = (data.invoice ? formatDateStr(data.invoice.invoiceDate) : (data.invoiceDate ? formatDateStr(data.invoiceDate) : "—"));
@@ -201,7 +211,7 @@ function handleUpsertRecord(sheet, entityType, data) {
   const postTotal = Number(data.postExpenseTotal || (data.invoice ? data.invoice.postExpenseTotal : 0)) || (preTotal + expTotal);
 
   const rowData = [
-    foundRow !== -1 ? foundRow - 1 : sheet.getLastRow(), // STT tạm (sẽ được renumberSTT đánh lại chuẩn xác)
+    foundRow !== -1 ? foundRow - 1 : sheet.getLastRow(),
     batchNumber,
     data.batchName || data.batch_name || "",
     data.supplier || "",
@@ -226,9 +236,6 @@ function handleUpsertRecord(sheet, entityType, data) {
   }
 }
 
-/**
- * XỬ LÝ XÓA BẢN GHI (DELETE)
- */
 function handleDeleteRecord(sheet, entityType, data, entityId) {
   const dataRange = sheet.getDataRange();
   const values = dataRange.getValues();
@@ -236,25 +243,22 @@ function handleDeleteRecord(sheet, entityType, data, entityId) {
   const targetBatchNum = data ? (data.batchNumber || data.batch_number) : "";
 
   for (let i = values.length - 1; i >= 1; i--) {
-    // Nếu xóa lô thuốc -> xóa cả dòng tương ứng
     if (entityType === 'batch') {
       if ((targetId && values[i][14] === targetId) || (targetBatchNum && values[i][1] === targetBatchNum)) {
         sheet.deleteRow(i + 1);
         break;
       }
-    } 
-    // Nếu xóa hóa đơn -> cập nhật trạng thái dòng về "Chưa có HĐ"
-    else if (entityType === 'invoice') {
+    } else if (entityType === 'invoice') {
       const batchId = data ? data.batchId : "";
       if ((batchId && values[i][14] === batchId) || (targetId && values[i][14] === targetId)) {
-        sheet.getRange(i + 1, 6).setValue("Chưa có HĐ"); // Trạng thái HĐ
-        sheet.getRange(i + 1, 7).setValue("—");          // Số HĐ
-        sheet.getRange(i + 1, 8).setValue("—");          // Ngày HĐ
-        sheet.getRange(i + 1, 9).setValue("—");          // Danh mục thuốc
-        sheet.getRange(i + 1, 10).setValue(0);           // Tiền hàng
-        sheet.getRange(i + 1, 11).setValue(0);           // Chi phí
-        sheet.getRange(i + 1, 12).setValue(0);           // Tổng tiền
-        sheet.getRange(i + 1, 13).setValue("—");         // Chi tiết chi phí
+        sheet.getRange(i + 1, 6).setValue("Chưa có HĐ");
+        sheet.getRange(i + 1, 7).setValue("—");
+        sheet.getRange(i + 1, 8).setValue("—");
+        sheet.getRange(i + 1, 9).setValue("—");
+        sheet.getRange(i + 1, 10).setValue(0);
+        sheet.getRange(i + 1, 11).setValue(0);
+        sheet.getRange(i + 1, 12).setValue(0);
+        sheet.getRange(i + 1, 13).setValue("—");
         sheet.getRange(i + 1, 16).setValue(new Date().toLocaleString("vi-VN"));
         break;
       }
@@ -262,8 +266,121 @@ function handleDeleteRecord(sheet, entityType, data, entityId) {
   }
 }
 
+// ====================================================================
+// LUỒNG 2: GOOGLE SHEETS -> MYSQL CLOUD (TRIGGER CHỈNH SỬA TRỰC TIẾP)
+// ====================================================================
+
 /**
- * TỰ ĐỘNG ĐÁNH LẠI SỐ THỨ TỰ (STT) TĂNG DẦN LIÊN TỤC 1, 2, 3, 4, 5...
+ * Trình kích hoạt tự động phát hiện khi người dùng chỉnh sửa trên Google Sheets
+ * Cần tạo Installable Trigger: "onSpreadsheetEdit" -> "Khi chỉnh sửa"
+ */
+function onSpreadsheetEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    const sheet = e.range.getSheet();
+    if (sheet.getName() !== SHEET_NAME) return;
+
+    const row = e.range.getRow();
+    // Bỏ qua dòng tiêu đề
+    if (row <= 1) return;
+
+    const col = e.range.getColumn();
+    // Chỉ đồng bộ khi sửa các cột được phép: Số lô (2), Tên lô (3), NCC (4), Ngày nhập (5), Ghi chú (14)
+    const editableCols = [2, 3, 4, 5, 14];
+    if (!editableCols.includes(col)) return;
+
+    syncRowToBackend(sheet, row);
+  } catch (err) {
+    console.error("Lỗi onSpreadsheetEdit:", err.toString());
+  }
+}
+
+/**
+ * Menu thủ công: Đồng bộ dòng đang chọn về MySQL Cloud
+ */
+function syncActiveRowToMySQL() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  if (sheet.getName() !== SHEET_NAME) {
+    SpreadsheetApp.getUi().alert("Vui lòng chọn tab " + SHEET_NAME);
+    return;
+  }
+  const row = sheet.getActiveCell().getRow();
+  if (row <= 1) {
+    SpreadsheetApp.getUi().alert("Vui lòng chọn một dòng dữ liệu (không chọn dòng tiêu đề).");
+    return;
+  }
+  syncRowToBackend(sheet, row, true);
+}
+
+/**
+ * Gửi dữ liệu một dòng từ Google Sheets sang Backend Cloud
+ */
+function syncRowToBackend(sheet, row, showAlert) {
+  if (!BACKEND_API_URL || BACKEND_API_URL.includes("YOUR_BACKEND_CLOUD_DOMAIN")) {
+    if (showAlert) {
+      SpreadsheetApp.getUi().alert("Chưa cấu hình BACKEND_API_URL trong mã Apps Script!");
+    }
+    return;
+  }
+
+  const rowValues = sheet.getRange(row, 1, 1, 16).getValues()[0];
+  const batchId = String(rowValues[14] || "").trim(); // Cột O: ID ổn định của hệ thống
+
+  if (!batchId) {
+    if (showAlert) {
+      SpreadsheetApp.getUi().alert("Dòng này chưa có Mã ID Lô hệ thống (Cột O). Không thể đồng bộ.");
+    }
+    return;
+  }
+
+  const payload = {
+    entityType: "batch",
+    mutation: "UPSERT",
+    entityId: batchId,
+    data: {
+      id: batchId,
+      batchNumber: String(rowValues[1] || "").trim(),
+      batchName: String(rowValues[2] || "").trim(),
+      supplier: String(rowValues[3] || "").trim(),
+      importDate: formatDateStr(rowValues[4]),
+      notes: String(rowValues[13] || "").trim()
+    }
+  };
+
+  const endpoint = BACKEND_API_URL.replace(/\/$/, "") + "/api/sync/from-sheets";
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    headers: {
+      "X-Sync-Token": SYNC_SECRET_TOKEN
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(endpoint, options);
+  const respCode = response.getResponseCode();
+  const respText = response.getContentText();
+
+  if (respCode >= 200 && respCode < 300) {
+    sheet.getRange(row, 16).setValue(new Date().toLocaleString("vi-VN") + " (Đã đồng bộ MySQL)");
+    if (showAlert) {
+      SpreadsheetApp.getUi().alert("ĐỒNG BỘ THÀNH CÔNG!", "Dữ liệu dòng này đã được cập nhật trực tiếp vào MySQL Cloud.", SpreadsheetApp.getUi().ButtonSet.OK);
+    }
+  } else {
+    sheet.getRange(row, 16).setValue("Lỗi đồng bộ: " + respCode);
+    if (showAlert) {
+      SpreadsheetApp.getUi().alert("ĐỒNG BỘ THẤT BẠI: " + respText);
+    }
+  }
+}
+
+// ====================================================================
+// HÀM BỔ TRỢ HỆ THỐNG
+// ====================================================================
+
+/**
+ * Tự động đánh lại số thứ tự (STT) cột A tăng dần liên tục: 1, 2, 3, 4, 5...
  */
 function renumberSTT(sheet) {
   const lastRow = sheet.getLastRow();
@@ -279,7 +396,7 @@ function renumberSTT(sheet) {
 
 function doGet(e) {
   return ContentService.createTextOutput(
-    "MintPharma Google Apps Script Webhook (1-Way MySQL -> Sheets) is active!"
+    "MintPharma Google Apps Script Cloud Sync Webhook is ONLINE!"
   ).setMimeType(ContentService.MimeType.TEXT);
 }
 

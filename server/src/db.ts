@@ -9,13 +9,17 @@ let pool: Pool;
 export async function initializeDatabase(): Promise<Pool> {
   console.log(`[Database] Đang kết nối tới MySQL Server tại ${env.DB_HOST}:${env.DB_PORT} (User: ${env.DB_USER})...`);
 
-  // Bước 1: Kết nối ban đầu để kiểm tra và tạo database nếu chưa có
+  const sslOption = env.DB_SSL ? { rejectUnauthorized: false } : undefined;
+
+  // Bước 1: Thử kiểm tra và tạo database nếu có quyền root/admin
   try {
     const rootConn = await mysql.createConnection({
       host: env.DB_HOST,
       port: env.DB_PORT,
       user: env.DB_USER,
       password: env.DB_PASSWORD,
+      ssl: sslOption,
+      connectTimeout: 15000,
     });
 
     await rootConn.query(
@@ -24,13 +28,8 @@ export async function initializeDatabase(): Promise<Pool> {
     await rootConn.end();
     console.log(`[Database] Đã xác nhận cơ sở dữ liệu \`${env.DB_NAME}\` sẵn sàng.`);
   } catch (err: any) {
-    console.error(`[Database Lỗi] Không thể kết nối tới MySQL Server:`, err.message);
-    if (err.code === 'ER_ACCESS_DENIED_ERROR') {
-      console.error(`[Database Hướng dẫn] Sai thông tin tài khoản hoặc mật khẩu MySQL. Vui lòng kiểm tra lại file .env (DB_USER, DB_PASSWORD).`);
-    } else if (err.code === 'ECONNREFUSED') {
-      console.error(`[Database Hướng dẫn] MySQL Server chưa được bật hoặc sai cổng ${env.DB_PORT}. Vui lòng kiểm tra dịch vụ MySQL84 trên máy tính.`);
-    }
-    throw err;
+    // Trên Cloud MySQL (Aiven, TiDB, Railway), database thường được tạo sẵn và tài khoản không có quyền CREATE DATABASE
+    console.log(`[Database Thông báo] Tiếp tục kết nối trực tiếp vào database \`${env.DB_NAME}\` (Lưu ý: ${err.message})`);
   }
 
   // Bước 2: Tạo connection pool gắn liền với database HoaDonLoThuoc
@@ -40,11 +39,15 @@ export async function initializeDatabase(): Promise<Pool> {
     user: env.DB_USER,
     password: env.DB_PASSWORD,
     database: env.DB_NAME,
+    ssl: sslOption,
     waitForConnections: true,
-    connectionLimit: 15,
+    connectionLimit: 10,
     queueLimit: 0,
     decimalNumbers: true,
     timezone: '+07:00',
+    connectTimeout: 20000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
   });
 
   // Bước 3: Kiểm tra lấy kết nối từ pool

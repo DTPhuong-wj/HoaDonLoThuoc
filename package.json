@@ -9,6 +9,8 @@
     "server:dev": "tsx watch server/src/index.ts",
     "full": "concurrently \"npm run dev\" \"npm run server:dev\"",
     "build": "tsc -b && vite build",
+    "db:backup": "tsx server/scripts/backupDatabase.ts",
+    "db:restore": "tsx server/scripts/restoreDatabase.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },
