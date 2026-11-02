@@ -36,25 +36,30 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleConfirmClick = () => {
+    onClose(); // Tắt popup ngay lập tức
+    onConfirm(); // Thực thi hành động xóa
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+        className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all animate-in zoom-in-95 duration-150"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
               <AlertTriangle size={20} />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-slate-800">{title}</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
             aria-label="Đóng"
           >
             <X size={18} />
@@ -63,15 +68,12 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
         {/* Content */}
         <div className="px-6 py-3">
-          <p className="text-sm text-slate-600 leading-relaxed">{message}</p>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{message}</p>
           {itemName && (
-            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-sm font-medium text-slate-800 break-words">
+            <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs sm:text-sm font-bold text-slate-800 break-words">
               {itemName}
             </div>
           )}
-          <p className="mt-3 text-xs text-rose-600 font-medium">
-            * Thao tác này không thể hoàn tác sau khi xác nhận.
-          </p>
         </div>
 
         {/* Actions */}
@@ -80,15 +82,15 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-white hover:border-slate-300 transition-colors"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-white hover:border-slate-300 transition-colors"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={handleConfirmClick}
             disabled={isLoading}
-            className="px-4 py-2.5 rounded-xl bg-rose-600 text-sm font-medium text-white hover:bg-rose-700 shadow-sm transition-colors flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 text-xs sm:text-sm font-bold text-white hover:bg-rose-700 shadow-xs transition-colors flex items-center gap-2"
           >
             {isLoading ? 'Đang xử lý...' : confirmLabel}
           </button>

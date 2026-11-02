@@ -1,821 +1,502 @@
-import type { Batch, Invoice, BatchWithInvoice, BatchStatistics, InvoiceItem, ExpenseItem } from '../types/pharmacy';
-import { calculateInvoiceTotals, generateUniqueId } from '../utils/formatters';
+import type {
+  Batch,
+  BatchStatistics,
+  SystemSettings,
+  SyncEvent,
+  SyncAction,
+  LabelColor,
+} from '../types/pharmacy';
+import { generateUniqueId, getTodayDateString } from '../utils/formatters';
 
 const STORAGE_KEYS = {
-  BATCHES: 'mint_pharma_batches_v1',
-  INVOICES: 'mint_pharma_invoices_v1',
+  BATCHES: 'mint_pharma_batches_simple',
+  SYNC_QUEUE: 'mint_pharma_sync_queue_simple',
+  SETTINGS: 'mint_pharma_settings_simple',
 };
 
-// Dữ liệu mẫu khởi tạo mang tính thực tế ngành dược Việt Nam
-const INITIAL_BATCHES: Batch[] = [
-  {
-    id: 'batch_dhg_01',
-    batchNumber: 'LO-DHG-202601',
-    batchName: 'Hapacol 650mg & Kháng sinh Klamentin',
-    supplier: 'Dược Hậu Giang (DHG Pharma)',
-    importDate: '2026-10-15',
-    notes: 'Nhập kho lô bảo quản nhiệt độ thường dưới 30°C. Đã kiểm tra cảm quan đạt chuẩn.',
-    hasInvoice: true,
-    invoiceId: 'inv_dhg_01',
-    invoiceNumber: 'HD-DHG-88219',
-    createdAt: '2026-10-15T08:30:00Z',
-    updatedAt: '2026-10-15T09:15:00Z',
-  },
-  {
-    id: 'batch_sanofi_02',
-    batchNumber: 'LO-SANOFI-202602',
-    batchName: 'Nexium Mups 40mg & Dị ứng Telfast',
-    supplier: 'Sanofi-Aventis Việt Nam',
-    importDate: '2026-10-20',
-    notes: 'Lô hàng kèm chứng chỉ CO/CQ chuẩn châu Âu. Yêu cầu vận chuyển thùng xốp lạnh.',
-    hasInvoice: true,
-    invoiceId: 'inv_sanofi_02',
-    invoiceNumber: 'HD-SNF-9941',
-    createdAt: '2026-10-20T10:00:00Z',
-    updatedAt: '2026-10-20T11:20:00Z',
-  },
-  {
-    id: 'batch_imex_03',
-    batchNumber: 'LO-IMEX-202603',
-    batchName: 'Ceftriaxone 1g & Kháng sinh tiêm',
-    supplier: 'Công ty CP Dược phẩm Imexpharm',
-    importDate: '2026-10-24',
-    notes: 'Hàng đã kiểm đếm đủ số lượng tại kho 2. Đang chờ kế toán nhà cung cấp gửi hóa đơn điện tử.',
-    hasInvoice: false,
-    createdAt: '2026-10-24T14:15:00Z',
-    updatedAt: '2026-10-24T14:15:00Z',
-  },
-  {
-    id: 'batch_traphaco_04',
-    batchNumber: 'LO-TRAPHACO-202604',
-    batchName: 'Boganic Forte & Hoạt huyết dưỡng não',
-    supplier: 'Công ty Cổ phần Traphaco',
-    importDate: '2026-10-25',
-    notes: 'Đông dược thảo dược nguồn gốc GACP-WHO. Hợp đồng miễn phí toàn bộ vận chuyển.',
-    hasInvoice: true,
-    invoiceId: 'inv_trp_04',
-    invoiceNumber: 'HD-TRP-4512',
-    createdAt: '2026-10-25T09:00:00Z',
-    updatedAt: '2026-10-25T09:45:00Z',
-  },
-  {
-    id: 'batch_stella_05',
-    batchNumber: 'LO-STELLA-202605',
-    batchName: 'Amlodipine 5mg & Thuốc Tim Mạch',
-    supplier: 'Công ty TNHH LD Stellapharm',
-    importDate: '2026-10-26',
-    notes: 'Hàng mới nhập sáng nay, 500 hộp Amlodipine nguyên đai nguyên kiện, chưa có hóa đơn tài chính.',
-    hasInvoice: false,
-    createdAt: '2026-10-26T08:00:00Z',
-    updatedAt: '2026-10-26T08:00:00Z',
-  },
-];
+const DEFAULT_SETTINGS: SystemSettings = {
+  googleAppsScriptUrl: '',
+  sheetsSyncSecret: 'mint_pharma_secure_sync_secret_token_2026',
+  defaultUser: 'Dược sĩ quản lý kho',
+};
 
-const INITIAL_INVOICES: Invoice[] = [
-  {
-    id: 'inv_dhg_01',
-    invoiceNumber: 'HD-DHG-88219',
-    invoiceDate: '2026-10-15',
-    batchId: 'batch_dhg_01',
-    batchNumber: 'LO-DHG-202601',
-    items: [
-      {
-        id: 'item_1_1',
-        medicineName: 'Hapacol 650mg',
-        specification: 'Hộp 10 vỉ x 10 viên',
-        unit: 'Hộp',
-        quantity: 200,
-        unitPrice: 45000,
-        amount: 9000000,
-        notes: 'Hạ sốt, giảm đau nhanh',
-      },
-      {
-        id: 'item_1_2',
-        medicineName: 'Klamentin 500/125',
-        specification: 'Hộp 2 vỉ x 7 viên',
-        unit: 'Hộp',
-        quantity: 150,
-        unitPrice: 110000,
-        amount: 16500000,
-        notes: 'Kháng sinh Amoxicillin + Acid Clavulanic',
-      },
-      {
-        id: 'item_1_3',
-        medicineName: 'Bocalex C 1000mg',
-        specification: 'Tuýp 10 viên sủi',
-        unit: 'Tuýp',
-        quantity: 100,
-        unitPrice: 32000,
-        amount: 3200000,
-        notes: 'Vitamin C tăng cường sức đề kháng',
-      },
-    ],
-    expenses: [
-      {
-        id: 'exp_1_1',
-        expenseName: 'Phí vận chuyển xe lạnh liên tỉnh',
-        category: 'shipping',
-        amount: 250000,
-        notes: 'Chuyến xe giao tận kho dược',
-      },
-      {
-        id: 'exp_1_2',
-        expenseName: 'Phí bốc xếp kho nhập hàng',
-        category: 'handling',
-        amount: 80000,
-        notes: 'Công bốc xếp 3 nhân công',
-      },
-    ],
-    preExpenseTotal: 28700000,
-    expensesTotal: 330000,
-    postExpenseTotal: 29030000,
-    notes: 'Hóa đơn đã đối chiếu trùng khớp với số lượng thực nhập kho.',
-    createdAt: '2026-10-15T09:15:00Z',
-    updatedAt: '2026-10-15T09:15:00Z',
-  },
-  {
-    id: 'inv_sanofi_02',
-    invoiceNumber: 'HD-SNF-9941',
-    invoiceDate: '2026-10-20',
-    batchId: 'batch_sanofi_02',
-    batchNumber: 'LO-SANOFI-202602',
-    items: [
-      {
-        id: 'item_2_1',
-        medicineName: 'Nexium Mups 40mg',
-        specification: 'Hộp 2 vỉ x 7 viên',
-        unit: 'Hộp',
-        quantity: 120,
-        unitPrice: 340000,
-        amount: 40800000,
-        notes: 'Esomeprazole chính hãng Astra/Sanofi',
-      },
-      {
-        id: 'item_2_2',
-        medicineName: 'Telfast HD 180mg',
-        specification: 'Hộp 1 vỉ x 10 viên',
-        unit: 'Hộp',
-        quantity: 80,
-        unitPrice: 105000,
-        amount: 8400000,
-        notes: 'Thuốc chống dị ứng Fexofenadine',
-      },
-      {
-        id: 'item_2_3',
-        medicineName: 'Magne-B6 Corbiere',
-        specification: 'Hộp 5 vỉ x 10 viên',
-        unit: 'Hộp',
-        quantity: 150,
-        unitPrice: 48000,
-        amount: 7200000,
-        notes: 'Khoáng chất Magnesi & Vitamin B6',
-      },
-    ],
-    expenses: [
-      {
-        id: 'exp_2_1',
-        expenseName: 'Phí bảo quản kho lạnh đặc biệt',
-        category: 'storage',
-        amount: 400000,
-        notes: 'Lưu kho nhiệt độ 15-25°C độ ẩm <60%',
-      },
-      {
-        id: 'exp_2_2',
-        expenseName: 'Phí vận chuyển giao hàng nội thành',
-        category: 'shipping',
-        amount: 150000,
-        notes: 'Xe tải thùng kín',
-      },
-    ],
-    preExpenseTotal: 56400000,
-    expensesTotal: 550000,
-    postExpenseTotal: 56950000,
-    notes: 'Đã hoàn tất thanh toán chuyển khoản qua ngân hàng.',
-    createdAt: '2026-10-20T11:20:00Z',
-    updatedAt: '2026-10-20T11:20:00Z',
-  },
-  {
-    id: 'inv_trp_04',
-    invoiceNumber: 'HD-TRP-4512',
-    invoiceDate: '2026-10-25',
-    batchId: 'batch_traphaco_04',
-    batchNumber: 'LO-TRAPHACO-202604',
-    items: [
-      {
-        id: 'item_4_1',
-        medicineName: 'Boganic Forte',
-        specification: 'Hộp 5 vỉ x 10 viên nang mềm',
-        unit: 'Hộp',
-        quantity: 250,
-        unitPrice: 85000,
-        amount: 21250000,
-        notes: 'Cao Actiso, Rau đắng đất, Bìm bìm',
-      },
-      {
-        id: 'item_4_2',
-        medicineName: 'Hoạt Huyết Dưỡng Não Traphaco',
-        specification: 'Hộp 5 vỉ x 20 viên bao phim',
-        unit: 'Hộp',
-        quantity: 200,
-        unitPrice: 92000,
-        amount: 18400000,
-        notes: 'Cao Đinh lăng & Bạch quả',
-      },
-      {
-        id: 'item_4_3',
-        medicineName: 'Ampelop Trị Viêm Loét Dạ Dày',
-        specification: 'Hộp 9 vỉ x 10 viên',
-        unit: 'Hộp',
-        quantity: 100,
-        unitPrice: 115000,
-        amount: 11500000,
-        notes: 'Chiết xuất cao Chè dây chuẩn hóa',
-      },
-    ],
-    expenses: [], // Không có chi phí phát sinh -> Tiền sau chi phí = Tiền trước chi phí
-    preExpenseTotal: 51150000,
-    expensesTotal: 0,
-    postExpenseTotal: 51150000,
-    notes: 'Miễn phí chi phí phát sinh theo chính sách đại lý cấp 1.',
-    createdAt: '2026-10-25T09:45:00Z',
-    updatedAt: '2026-10-25T09:45:00Z',
-  },
-];
-
-type Listener = () => void;
-
-class StorageService {
-  private listeners: Set<Listener> = new Set();
+export class StorageService {
+  private isProcessingQueue = false;
 
   constructor() {
-    this.ensureInitialized();
+    this.initLocalStorage();
+    this.setupNetworkListener();
   }
 
-  private ensureInitialized(): void {
-    if (typeof window === 'undefined') return;
+  private initLocalStorage(): void {
+    try {
+      if (typeof window === 'undefined') return;
 
-    if (!localStorage.getItem(STORAGE_KEYS.BATCHES)) {
-      localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(INITIAL_BATCHES));
+      const existingRaw = localStorage.getItem(STORAGE_KEYS.BATCHES);
+      if (existingRaw) {
+        try {
+          const list = JSON.parse(existingRaw);
+          const hasMockData = Array.isArray(list) && list.some((b: any) =>
+            b.batchNumber && (
+              b.batchNumber.includes('LO-DHG-202601') ||
+              b.batchNumber.includes('LO-SANOFI-202602') ||
+              b.batchNumber.includes('LO-IMEX-202603') ||
+              b.batchNumber.includes('LO-TRAPHACO-202604') ||
+              b.batchNumber.includes('LO-STELLA-202605')
+            )
+          );
+          if (hasMockData) {
+            localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify([]));
+          }
+        } catch {
+          localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify([]));
+        }
+      } else {
+        localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify([]));
+      }
+
+      if (!localStorage.getItem(STORAGE_KEYS.SETTINGS)) {
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
+      }
+      if (!localStorage.getItem(STORAGE_KEYS.SYNC_QUEUE)) {
+        localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify([]));
+      }
+    } catch (e) {
+      console.error('[StorageService] Lỗi khởi tạo LocalStorage:', e);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.INVOICES)) {
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
+  }
+
+  private setupNetworkListener(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        this.processSyncQueue();
+      });
     }
   }
 
-  public subscribe(listener: Listener): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+  getSettings(): SystemSettings {
+    try {
+      if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+      const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    } catch {}
+    return DEFAULT_SETTINGS;
   }
 
-  private notify(): void {
-    this.listeners.forEach((listener) => {
-      try {
-        listener();
-      } catch (err) {
-        console.error('Lỗi khi thông báo cập nhật dữ liệu:', err);
+  saveSettings(newSettings: Partial<SystemSettings>): SystemSettings {
+    const current = this.getSettings();
+    const updated = { ...current, ...newSettings };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
+    }
+    return updated;
+  }
+
+  isSheetConnected(): boolean {
+    const s = this.getSettings();
+    return Boolean(s.googleAppsScriptUrl && s.googleAppsScriptUrl.trim().length > 0);
+  }
+
+  private getRawBatches(): Batch[] {
+    try {
+      if (typeof window === 'undefined') return [];
+      const raw = localStorage.getItem(STORAGE_KEYS.BATCHES);
+      if (!raw) return [];
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return [];
+      return list.map((b) => ({
+        id: b.id,
+        batchNumber: b.batchNumber || '',
+        batchName: b.batchName || '',
+        labelColor: (b.labelColor === 'white' ? 'white' : 'green') as LabelColor,
+        importDate: b.importDate || getTodayDateString(),
+        status: b.status === 'deleted' ? 'deleted' : 'active',
+        createdAt: b.createdAt || new Date().toISOString(),
+        updatedAt: b.updatedAt || new Date().toISOString(),
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  private saveRawBatches(batches: Batch[]): void {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
+      }
+    } catch (e) {
+      console.error('[StorageService] Lỗi lưu lô thuốc:', e);
+    }
+  }
+
+  getBatches(includeDeleted = false): Batch[] {
+    const list = this.getRawBatches();
+    return includeDeleted ? list : list.filter((b) => b.status !== 'deleted');
+  }
+
+  getBatchById(id: string): Batch | null {
+    const all = this.getBatches(true);
+    return all.find((b) => b.id === id) || null;
+  }
+
+  getStatistics(): BatchStatistics {
+    const batches = this.getBatches(false);
+    let greenLabelCount = 0;
+    let whiteLabelCount = 0;
+
+    batches.forEach((b) => {
+      if (b.labelColor === 'green') {
+        greenLabelCount++;
+      } else {
+        whiteLabelCount++;
       }
     });
-  }
-
-  public getBatches(): Batch[] {
-    this.ensureInitialized();
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.BATCHES);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return INITIAL_BATCHES;
-    }
-  }
-
-  public getInvoices(): Invoice[] {
-    this.ensureInitialized();
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.INVOICES);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return INITIAL_INVOICES;
-    }
-  }
-
-  public getBatchById(id: string): Batch | undefined {
-    return this.getBatches().find((b) => b.id === id);
-  }
-
-  public getBatchByNumber(batchNumber: string): Batch | undefined {
-    const cleanNumber = batchNumber.trim().toLowerCase();
-    return this.getBatches().find((b) => b.batchNumber.toLowerCase() === cleanNumber);
-  }
-
-  public getInvoiceById(id: string): Invoice | undefined {
-    return this.getInvoices().find((inv) => inv.id === id);
-  }
-
-  public getInvoiceByBatchId(batchId: string): Invoice | undefined {
-    return this.getInvoices().find((inv) => inv.batchId === batchId);
-  }
-
-  public getBatchesWithInvoices(): BatchWithInvoice[] {
-    const batches = this.getBatches();
-    const invoices = this.getInvoices();
-
-    return batches.map((batch) => {
-      const invoice = invoices.find((inv) => inv.batchId === batch.id);
-      return {
-        ...batch,
-        hasInvoice: !!invoice,
-        invoiceId: invoice?.id,
-        invoiceNumber: invoice?.invoiceNumber,
-        invoice,
-        itemCount: invoice?.items?.length || 0,
-        preExpenseTotal: invoice?.preExpenseTotal || 0,
-        expensesTotal: invoice?.expensesTotal || 0,
-        postExpenseTotal: invoice?.postExpenseTotal || 0,
-      };
-    });
-  }
-
-  public getStatistics(): BatchStatistics {
-    const batchesWithInvoices = this.getBatchesWithInvoices();
-    const totalBatches = batchesWithInvoices.length;
-    const withInvoiceCount = batchesWithInvoices.filter((b) => b.hasInvoice).length;
-    const withoutInvoiceCount = totalBatches - withInvoiceCount;
-
-    const totals = batchesWithInvoices.reduce(
-      (acc, b) => {
-        acc.pre += b.preExpenseTotal;
-        acc.exp += b.expensesTotal;
-        acc.post += b.postExpenseTotal;
-        return acc;
-      },
-      { pre: 0, exp: 0, post: 0 }
-    );
 
     return {
-      totalBatches,
-      withInvoiceCount,
-      withoutInvoiceCount,
-      totalLandedExpense: totals.post,
-      totalPreExpense: totals.pre,
-      totalExpenses: totals.exp,
+      totalBatches: batches.length,
+      greenLabelCount,
+      whiteLabelCount,
     };
   }
 
   /**
-   * Tra cứu lô thuốc: tìm theo số lô, tên thuốc, hoặc mã hóa đơn
+   * Thêm mới Lô thuốc: HỖ TRỢ TÁCH TỪNG TÊN THUỐC THÀNH TỪNG DÒNG RIÊNG BIỆT
    */
-  public search(query: string): BatchWithInvoice[] {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-
-    const all = this.getBatchesWithInvoices();
-    return all.filter((item) => {
-      // 1. Số lô thuốc
-      if (item.batchNumber.toLowerCase().includes(q)) return true;
-      // 2. Tên lô thuốc / nhà cung cấp
-      if (item.batchName.toLowerCase().includes(q)) return true;
-      if (item.supplier.toLowerCase().includes(q)) return true;
-      // 3. Mã hóa đơn
-      if (item.invoiceNumber && item.invoiceNumber.toLowerCase().includes(q)) return true;
-      // 4. Tên các loại thuốc thuộc lô
-      if (item.invoice?.items?.some((med) => med.medicineName.toLowerCase().includes(q))) return true;
-      return false;
-    });
-  }
-
-  /**
-   * Thêm một lô thuốc mới
-   */
-  public createBatch(batchData: {
+  async createBatches(data: {
     batchNumber: string;
-    batchName: string;
-    supplier: string;
+    batchNames: string[]; // Danh sách các tên thuốc tách riêng
+    labelColor: LabelColor;
     importDate: string;
-    notes?: string;
-  }): { success: boolean; message: string; batch?: Batch } {
-    const trimmedNumber = batchData.batchNumber.trim();
-    if (!trimmedNumber) {
-      return { success: false, message: 'Số lô thuốc là bắt buộc.' };
-    }
-
-    const batches = this.getBatches();
-    const exists = batches.some((b) => b.batchNumber.toLowerCase() === trimmedNumber.toLowerCase());
-    if (exists) {
-      return { success: false, message: `Số lô "${trimmedNumber}" đã tồn tại trong hệ thống. Vui lòng nhập số lô khác.` };
-    }
-
+  }): Promise<{ success: boolean; message: string; count: number; batches: Batch[] }> {
     const now = new Date().toISOString();
-    const newBatch: Batch = {
-      id: generateUniqueId('batch'),
-      batchNumber: trimmedNumber,
-      batchName: batchData.batchName.trim() || 'Lô thuốc nhập mới',
-      supplier: batchData.supplier.trim() || 'Chưa xác định',
-      importDate: batchData.importDate || now.split('T')[0],
-      notes: batchData.notes?.trim() || '',
-      hasInvoice: false,
-      createdAt: now,
-      updatedAt: now,
-    };
+    const batchNumber = data.batchNumber.trim();
+    const labelColor = data.labelColor || 'green';
+    const importDate = data.importDate || getTodayDateString();
 
-    batches.unshift(newBatch);
-    localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
-    this.notify();
+    // Lọc danh sách tên thuốc, loại bỏ dòng trống
+    const names = data.batchNames
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0);
 
-    return { success: true, message: `Đã tạo thành công lô thuốc ${newBatch.batchNumber}`, batch: newBatch };
-  }
-
-  /**
-   * Cập nhật thông tin lô thuốc
-   */
-  public updateBatch(id: string, updates: Partial<Batch>): { success: boolean; message: string } {
-    const batches = this.getBatches();
-    const index = batches.findIndex((b) => b.id === id);
-    if (index === -1) {
-      return { success: false, message: 'Không tìm thấy lô thuốc cần sửa.' };
+    if (names.length === 0) {
+      throw new Error('Vui lòng nhập ít nhất 1 tên thuốc');
     }
 
-    // Nếu đổi số lô, kiểm tra trùng lặp
-    if (updates.batchNumber && updates.batchNumber.trim().toLowerCase() !== batches[index].batchNumber.toLowerCase()) {
-      const exists = batches.some(
-        (b) => b.id !== id && b.batchNumber.toLowerCase() === updates.batchNumber!.trim().toLowerCase()
-      );
-      if (exists) {
-        return { success: false, message: `Số lô "${updates.batchNumber}" đã tồn tại. Vui lòng chọn số khác.` };
-      }
-    }
+    const createdBatches: Batch[] = [];
+    const currentBatches = this.getRawBatches();
 
-    const now = new Date().toISOString();
-    const updatedBatch = {
-      ...batches[index],
-      ...updates,
-      updatedAt: now,
-    };
-
-    batches[index] = updatedBatch;
-    localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
-
-    // Đồng bộ lại batchNumber trong hóa đơn nếu có
-    if (updates.batchNumber) {
-      const invoices = this.getInvoices();
-      const invIndex = invoices.findIndex((inv) => inv.batchId === id);
-      if (invIndex !== -1) {
-        invoices[invIndex].batchNumber = updates.batchNumber;
-        invoices[invIndex].updatedAt = now;
-        localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
-      }
-    }
-
-    this.notify();
-    return { success: true, message: 'Đã cập nhật thông tin lô thuốc.' };
-  }
-
-  /**
-   * Xóa một lô thuốc và hóa đơn liên quan (nếu có)
-   */
-  public deleteBatch(id: string): { success: boolean; message: string } {
-    const batches = this.getBatches();
-    const target = batches.find((b) => b.id === id);
-    if (!target) {
-      return { success: false, message: 'Lô thuốc không tồn tại.' };
-    }
-
-    const newBatches = batches.filter((b) => b.id !== id);
-    const invoices = this.getInvoices();
-    const newInvoices = invoices.filter((inv) => inv.batchId !== id);
-
-    localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(newBatches));
-    localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(newInvoices));
-    this.notify();
-
-    return { success: true, message: `Đã xóa lô thuốc ${target.batchNumber} thành công.` };
-  }
-
-  /**
-   * Tạo hoặc cập nhật hóa đơn cho một lô thuốc
-   */
-  public saveInvoice(invoiceData: {
-    id?: string;
-    batchId: string;
-    invoiceNumber: string;
-    invoiceDate: string;
-    items: InvoiceItem[];
-    expenses: ExpenseItem[];
-    notes?: string;
-  }): { success: boolean; message: string; invoice?: Invoice } {
-    const batch = this.getBatchById(invoiceData.batchId);
-    if (!batch) {
-      return { success: false, message: 'Lô thuốc liên kết không tồn tại.' };
-    }
-
-    const trimmedInvNumber = invoiceData.invoiceNumber.trim();
-    if (!trimmedInvNumber) {
-      return { success: false, message: 'Mã hóa đơn là bắt buộc.' };
-    }
-
-    const invoices = this.getInvoices();
-    // Kiểm tra mã hóa đơn có trùng với hóa đơn của lô khác không
-    const duplicate = invoices.some(
-      (inv) => inv.invoiceNumber.toLowerCase() === trimmedInvNumber.toLowerCase() && inv.batchId !== invoiceData.batchId
-    );
-    if (duplicate) {
-      return { success: false, message: `Mã hóa đơn "${trimmedInvNumber}" đã được sử dụng cho một lô khác.` };
-    }
-
-    // Đảm bảo tính toán thành tiền từng item và tổng
-    const sanitizedItems: InvoiceItem[] = invoiceData.items.map((it) => {
-      const q = Math.max(0, Number(it.quantity) || 0);
-      const p = Math.max(0, Number(it.unitPrice) || 0);
-      return {
-        id: it.id || generateUniqueId('item'),
-        medicineName: it.medicineName.trim(),
-        specification: it.specification?.trim() || '',
-        unit: it.unit?.trim() || 'Hộp',
-        quantity: q,
-        unitPrice: p,
-        amount: Math.round(q * p),
-        notes: it.notes?.trim() || '',
-      };
-    });
-
-    const sanitizedExpenses: ExpenseItem[] = invoiceData.expenses.map((exp) => ({
-      id: exp.id || generateUniqueId('exp'),
-      expenseName: exp.expenseName.trim(),
-      category: exp.category || 'other',
-      amount: Math.max(0, Math.round(Number(exp.amount) || 0)),
-      notes: exp.notes?.trim() || '',
-    }));
-
-    const totals = calculateInvoiceTotals(sanitizedItems, sanitizedExpenses);
-    const now = new Date().toISOString();
-
-    const existingInvIndex = invoices.findIndex((inv) => inv.batchId === invoiceData.batchId);
-    let savedInvoice: Invoice;
-
-    if (existingInvIndex !== -1) {
-      // Cập nhật hóa đơn hiện có
-      savedInvoice = {
-        ...invoices[existingInvIndex],
-        invoiceNumber: trimmedInvNumber,
-        invoiceDate: invoiceData.invoiceDate,
-        batchNumber: batch.batchNumber,
-        items: sanitizedItems,
-        expenses: sanitizedExpenses,
-        preExpenseTotal: totals.preExpenseTotal,
-        expensesTotal: totals.expensesTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        notes: invoiceData.notes?.trim() || '',
-        updatedAt: now,
-      };
-      invoices[existingInvIndex] = savedInvoice;
-    } else {
-      // Tạo mới hóa đơn
-      savedInvoice = {
-        id: invoiceData.id || generateUniqueId('inv'),
-        invoiceNumber: trimmedInvNumber,
-        invoiceDate: invoiceData.invoiceDate || now.split('T')[0],
-        batchId: invoiceData.batchId,
-        batchNumber: batch.batchNumber,
-        items: sanitizedItems,
-        expenses: sanitizedExpenses,
-        preExpenseTotal: totals.preExpenseTotal,
-        expensesTotal: totals.expensesTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        notes: invoiceData.notes?.trim() || '',
+    names.forEach((medName) => {
+      const newBatch: Batch = {
+        id: generateUniqueId('med'),
+        batchNumber,
+        batchName: medName,
+        labelColor,
+        importDate,
+        status: 'active',
         createdAt: now,
         updatedAt: now,
       };
-      invoices.unshift(savedInvoice);
-    }
+      createdBatches.push(newBatch);
+      currentBatches.unshift(newBatch);
+    });
 
-    localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+    this.saveRawBatches(currentBatches);
 
-    // Cập nhật trạng thái lô thuốc thành Đã có hóa đơn
-    const batches = this.getBatches();
-    const batchIndex = batches.findIndex((b) => b.id === invoiceData.batchId);
-    if (batchIndex !== -1) {
-      batches[batchIndex] = {
-        ...batches[batchIndex],
-        hasInvoice: true,
-        invoiceId: savedInvoice.id,
-        invoiceNumber: savedInvoice.invoiceNumber,
-        updatedAt: now,
-      };
-      localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
-    }
+    // Gửi sự kiện CREATE_LOT sang Google Sheet để lưu từng dòng riêng biệt
+    const labelColorText = labelColor === 'green' ? 'Nhãn xanh' : 'Nhãn trắng';
+    this.enqueueSyncEvent('CREATE_LOT', createdBatches[0].id, {
+      batchNumber,
+      batchNames: names,
+      labelColor: labelColorText,
+      importDate,
+    });
 
-    this.notify();
-    return { success: true, message: `Đã lưu hóa đơn ${savedInvoice.invoiceNumber} thành công!`, invoice: savedInvoice };
+    this.processSyncQueue();
+
+    return {
+      success: true,
+      message: `Đã thêm ${names.length} tên thuốc tách riêng vào lô ${batchNumber}.`,
+      count: names.length,
+      batches: createdBatches,
+    };
+  }
+
+  // Tương thích ngược nếu gọi đơn lẻ
+  async createBatch(data: {
+    batchNumber: string;
+    batchName: string;
+    labelColor: LabelColor;
+    importDate: string;
+  }): Promise<{ success: boolean; message: string; batch: Batch }> {
+    const res = await this.createBatches({
+      batchNumber: data.batchNumber,
+      batchNames: [data.batchName],
+      labelColor: data.labelColor,
+      importDate: data.importDate,
+    });
+    return {
+      success: res.success,
+      message: res.message,
+      batch: res.batches[0],
+    };
   }
 
   /**
-   * Xóa hóa đơn của một lô thuốc (đưa lô về trạng thái "Chưa có hóa đơn")
+   * Cập nhật thông tin dòng thuốc
    */
-  public deleteInvoice(invoiceId: string): { success: boolean; message: string } {
-    const invoices = this.getInvoices();
-    const target = invoices.find((inv) => inv.id === invoiceId);
-    if (!target) {
-      return { success: false, message: 'Hóa đơn không tồn tại.' };
+  async updateBatch(
+    id: string,
+    updates: Partial<Batch>
+  ): Promise<{ success: boolean; message: string; batch: Batch }> {
+    const batches = this.getRawBatches();
+    const index = batches.findIndex((b) => b.id === id);
+
+    if (index === -1) {
+      throw new Error(`Không tìm thấy dòng thuốc có ID: ${id}`);
     }
 
-    const newInvoices = invoices.filter((inv) => inv.id !== invoiceId);
-    localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(newInvoices));
-
-    // Cập nhật lại batch
-    const batches = this.getBatches();
-    const batchIndex = batches.findIndex((b) => b.id === target.batchId);
-    if (batchIndex !== -1) {
-      batches[batchIndex] = {
-        ...batches[batchIndex],
-        hasInvoice: false,
-        invoiceId: undefined,
-        invoiceNumber: undefined,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
-    }
-
-    this.notify();
-    return { success: true, message: `Đã xóa hóa đơn ${target.invoiceNumber}. Lô thuốc chuyển về trạng thái Chưa có hóa đơn.` };
-  }
-
-  /**
-   * Thêm hoặc sửa thuốc trực tiếp trong hóa đơn của lô
-   */
-  public upsertInvoiceItem(batchId: string, itemData: Omit<InvoiceItem, 'id' | 'amount'> & { id?: string }): { success: boolean; message: string } {
-    const invoice = this.getInvoiceByBatchId(batchId);
-    if (!invoice) {
-      return { success: false, message: 'Lô thuốc chưa có hóa đơn. Vui lòng tạo hóa đơn trước khi thêm thuốc.' };
-    }
-
-    const q = Math.max(0, Number(itemData.quantity) || 0);
-    const p = Math.max(0, Number(itemData.unitPrice) || 0);
-    const amount = Math.round(q * p);
-
-    let updatedItems: InvoiceItem[];
-    if (itemData.id) {
-      // Sửa
-      updatedItems = invoice.items.map((it) =>
-        it.id === itemData.id
-          ? {
-              ...it,
-              medicineName: itemData.medicineName.trim(),
-              specification: itemData.specification?.trim() || '',
-              unit: itemData.unit?.trim() || 'Hộp',
-              quantity: q,
-              unitPrice: p,
-              amount,
-              notes: itemData.notes?.trim() || '',
-            }
-          : it
-      );
-    } else {
-      // Thêm mới
-      const newItem: InvoiceItem = {
-        id: generateUniqueId('item'),
-        medicineName: itemData.medicineName.trim(),
-        specification: itemData.specification?.trim() || '',
-        unit: itemData.unit?.trim() || 'Hộp',
-        quantity: q,
-        unitPrice: p,
-        amount,
-        notes: itemData.notes?.trim() || '',
-      };
-      updatedItems = [...invoice.items, newItem];
-    }
-
-    const totals = calculateInvoiceTotals(updatedItems, invoice.expenses);
+    const current = batches[index];
     const now = new Date().toISOString();
 
-    const invoices = this.getInvoices();
-    const idx = invoices.findIndex((inv) => inv.id === invoice.id);
-    if (idx !== -1) {
-      invoices[idx] = {
-        ...invoices[idx],
-        items: updatedItems,
-        preExpenseTotal: totals.preExpenseTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        updatedAt: now,
-      };
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
-      this.notify();
-    }
+    const updated: Batch = {
+      ...current,
+      ...updates,
+      id: current.id,
+      createdAt: current.createdAt,
+      updatedAt: now,
+    };
 
-    return { success: true, message: 'Đã lưu loại thuốc thành công.' };
+    batches[index] = updated;
+    this.saveRawBatches(batches);
+
+    const labelColorText = updated.labelColor === 'green' ? 'Nhãn xanh' : 'Nhãn trắng';
+    this.enqueueSyncEvent('UPDATE_LOT', id, {
+      batchNumber: updated.batchNumber,
+      batchName: updated.batchName,
+      labelColor: labelColorText,
+      importDate: updated.importDate,
+      oldBatchNumber: current.batchNumber,
+      oldBatchName: current.batchName,
+    });
+
+    this.processSyncQueue();
+
+    return {
+      success: true,
+      message: 'Đã cập nhật thông tin thành công.',
+      batch: updated,
+    };
   }
 
   /**
-   * Xóa một loại thuốc khỏi hóa đơn
+   * Xóa dòng thuốc trên Website (KHÔNG CẬP NHẬT HOẶC XÓA TRÊN GOOGLE SHEET)
+   * Sheet chỉ lưu khi thêm mới và sửa.
    */
-  public deleteInvoiceItem(batchId: string, itemId: string): { success: boolean; message: string } {
-    const invoice = this.getInvoiceByBatchId(batchId);
-    if (!invoice) return { success: false, message: 'Hóa đơn không tồn tại.' };
+  async deleteBatch(id: string): Promise<{ success: boolean; message: string }> {
+    const batches = this.getRawBatches();
+    const index = batches.findIndex((b) => b.id === id);
 
-    const updatedItems = invoice.items.filter((it) => it.id !== itemId);
-    const totals = calculateInvoiceTotals(updatedItems, invoice.expenses);
-
-    const invoices = this.getInvoices();
-    const idx = invoices.findIndex((inv) => inv.id === invoice.id);
-    if (idx !== -1) {
-      invoices[idx] = {
-        ...invoices[idx],
-        items: updatedItems,
-        preExpenseTotal: totals.preExpenseTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
-      this.notify();
+    if (index === -1) {
+      throw new Error(`Không tìm thấy dòng thuốc để xóa: ${id}`);
     }
 
-    return { success: true, message: 'Đã xóa loại thuốc khỏi danh sách.' };
+    const current = batches[index];
+    current.status = 'deleted';
+    current.updatedAt = new Date().toISOString();
+
+    batches[index] = current;
+    this.saveRawBatches(batches);
+
+    // Lưu ý: Theo yêu cầu, khi xóa trên web thì KHÔNG cập nhật hay gửi lệnh xóa sang Google Sheet
+    // Dữ liệu trên Google Sheet được giữ nguyên an toàn tuyệt đối.
+
+    return {
+      success: true,
+      message: 'Đã xóa trên website (Dữ liệu trên Google Sheet được giữ nguyên).',
+    };
   }
 
-  /**
-   * Thêm hoặc sửa chi phí phát sinh
-   */
-  public upsertExpenseItem(batchId: string, expenseData: Omit<ExpenseItem, 'id'> & { id?: string }): { success: boolean; message: string } {
-    const invoice = this.getInvoiceByBatchId(batchId);
-    if (!invoice) {
-      return { success: false, message: 'Lô thuốc chưa có hóa đơn. Vui lòng tạo hóa đơn trước khi thêm chi phí.' };
+  getSyncQueue(): SyncEvent[] {
+    try {
+      if (typeof window === 'undefined') return [];
+      const raw = localStorage.getItem(STORAGE_KEYS.SYNC_QUEUE);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveSyncQueue(queue: SyncEvent[]): void {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue));
+      }
+    } catch (e) {
+      console.error('[StorageService] Lỗi lưu hàng đợi:', e);
+    }
+  }
+
+  enqueueSyncEvent(action: SyncAction, lotId: string, payload: any): SyncEvent {
+    const queue = this.getSyncQueue();
+    const event: SyncEvent = {
+      id: generateUniqueId('sq'),
+      eventId: generateUniqueId('evt_' + action.toLowerCase()),
+      action,
+      lotId,
+      timestamp: new Date().toISOString(),
+      payload,
+      status: 'pending',
+      retryCount: 0,
+    };
+
+    queue.push(event);
+    this.saveSyncQueue(queue);
+    return event;
+  }
+
+  async processSyncQueue(): Promise<{ total: number; successCount: number; failedCount: number }> {
+    if (this.isProcessingQueue) {
+      return { total: 0, successCount: 0, failedCount: 0 };
     }
 
-    const amount = Math.max(0, Math.round(Number(expenseData.amount) || 0));
+    const settings = this.getSettings();
+    const gasUrl = settings.googleAppsScriptUrl?.trim();
 
-    let updatedExpenses: ExpenseItem[];
-    if (expenseData.id) {
-      updatedExpenses = invoice.expenses.map((exp) =>
-        exp.id === expenseData.id
-          ? {
-              ...exp,
-              expenseName: expenseData.expenseName.trim(),
-              category: expenseData.category || 'other',
-              amount,
-              notes: expenseData.notes?.trim() || '',
+    if (!gasUrl) {
+      return { total: 0, successCount: 0, failedCount: 0 };
+    }
+
+    this.isProcessingQueue = true;
+    const queue = this.getSyncQueue();
+    const pendingEvents = queue.filter((e) => e.status === 'pending' || e.status === 'failed');
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const event of pendingEvents) {
+      try {
+        event.lastAttempt = new Date().toISOString();
+        event.retryCount = (event.retryCount || 0) + 1;
+
+        const requestBody = {
+          token: settings.sheetsSyncSecret,
+          eventId: event.eventId,
+          action: event.action,
+          lotId: event.lotId,
+          timestamp: event.timestamp,
+          payload: event.payload,
+        };
+
+        const response = await fetch(gasUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (response.ok || response.type === 'opaque') {
+          let isSuccess = true;
+          try {
+            const resJson = await response.json();
+            if (resJson && resJson.success === false) {
+              isSuccess = false;
+              event.errorMessage = resJson.message || 'Lỗi xử lý';
             }
-          : exp
-      );
-    } else {
-      const newExp: ExpenseItem = {
-        id: generateUniqueId('exp'),
-        expenseName: expenseData.expenseName.trim(),
-        category: expenseData.category || 'other',
-        amount,
-        notes: expenseData.notes?.trim() || '',
-      };
-      updatedExpenses = [...invoice.expenses, newExp];
+          } catch {
+            isSuccess = true;
+          }
+
+          if (isSuccess) {
+            event.status = 'synced';
+            event.errorMessage = undefined;
+            successCount++;
+          } else {
+            event.status = 'failed';
+            failedCount++;
+          }
+        } else {
+          event.status = 'failed';
+          event.errorMessage = `Lỗi HTTP ${response.status}`;
+          failedCount++;
+        }
+      } catch (err: any) {
+        event.status = 'failed';
+        event.errorMessage = err.message || 'Lỗi kết nối';
+        failedCount++;
+      }
     }
 
-    const totals = calculateInvoiceTotals(invoice.items, updatedExpenses);
-    const invoices = this.getInvoices();
-    const idx = invoices.findIndex((inv) => inv.id === invoice.id);
-    if (idx !== -1) {
-      invoices[idx] = {
-        ...invoices[idx],
-        expenses: updatedExpenses,
-        expensesTotal: totals.expensesTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
-      this.notify();
-    }
+    this.saveSyncQueue(queue);
+    this.isProcessingQueue = false;
 
-    return { success: true, message: 'Đã lưu chi phí phát sinh thành công.' };
+    return {
+      total: pendingEvents.length,
+      successCount,
+      failedCount,
+    };
   }
 
-  /**
-   * Xóa một khoản chi phí phát sinh
-   */
-  public deleteExpenseItem(batchId: string, expenseId: string): { success: boolean; message: string } {
-    const invoice = this.getInvoiceByBatchId(batchId);
-    if (!invoice) return { success: false, message: 'Hóa đơn không tồn tại.' };
+  async fetchBatchesFromSheet(): Promise<{ success: boolean; count: number; message: string }> {
+    const settings = this.getSettings();
+    const gasUrl = settings.googleAppsScriptUrl?.trim();
 
-    const updatedExpenses = invoice.expenses.filter((exp) => exp.id !== expenseId);
-    const totals = calculateInvoiceTotals(invoice.items, updatedExpenses);
-
-    const invoices = this.getInvoices();
-    const idx = invoices.findIndex((inv) => inv.id === invoice.id);
-    if (idx !== -1) {
-      invoices[idx] = {
-        ...invoices[idx],
-        expenses: updatedExpenses,
-        expensesTotal: totals.expensesTotal,
-        postExpenseTotal: totals.postExpenseTotal,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
-      this.notify();
+    if (!gasUrl) {
+      return { success: false, count: 0, message: 'Chưa nhập URL Google Sheet' };
     }
 
-    return { success: true, message: 'Đã xóa chi phí phát sinh.' };
+    try {
+      const response = await fetch(gasUrl, { method: 'GET' });
+      if (!response.ok) {
+        throw new Error(`Máy chủ Google phản hồi mã lỗi HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Không thể đọc dữ liệu từ Sheet');
+      }
+
+      const batchesFromSheet: Batch[] = (data.batches || []).map((b: any, index: number) => ({
+        id: b.id || `batch_sheet_${index + 1}`,
+        batchNumber: b.batchNumber || '',
+        batchName: b.batchName || '',
+        labelColor: b.labelColor === 'white' ? 'white' : 'green',
+        importDate: b.importDate || getTodayDateString(),
+        status: 'active',
+        createdAt: b.createdAt || new Date().toISOString(),
+        updatedAt: b.updatedAt || new Date().toISOString(),
+      }));
+
+      this.saveRawBatches(batchesFromSheet);
+
+      return {
+        success: true,
+        count: batchesFromSheet.length,
+        message: `Đã kết nối thành công! Đã nạp ${batchesFromSheet.length} dòng thuốc từ Sheet về Web.`,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        count: 0,
+        message: err.message || 'Lỗi kết nối tới URL Google Sheet',
+      };
+    }
   }
 
-  /**
-   * Khôi phục toàn bộ dữ liệu về bộ mẫu ban đầu
-   */
-  public resetToDemoData(): void {
-    localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(INITIAL_BATCHES));
-    localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
-    this.notify();
+  exportBatchesAsCSV(): string {
+    const batches = this.getBatches(false);
+    const headers = ['stt', 'lô thuốc', 'tên thuốc', 'nhãn', 'ngày nhập'];
+
+    const rows = batches.map((b, index) => {
+      const stt = index + 1;
+      const loThuoc = `"${(b.batchNumber || '').replace(/"/g, '""')}"`;
+      const tenThuoc = `"${(b.batchName || '').replace(/"/g, '""')}"`;
+      const nhanMau = b.labelColor === 'green' ? 'Nhãn xanh' : 'Nhãn trắng';
+      const ngayNhap = b.importDate || '';
+      return [stt, loThuoc, tenThuoc, nhanMau, ngayNhap].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\r\n');
   }
 }
 

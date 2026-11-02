@@ -12,6 +12,8 @@
     "db:backup": "tsx server/scripts/backupDatabase.ts",
     "db:restore": "tsx server/scripts/restoreDatabase.ts",
     "lint": "oxlint",
+    "test": "tsx scripts/verify_all_requirements.ts",
+    "test:verify": "tsx scripts/verify_all_requirements.ts",
     "preview": "vite preview"
   },
   "dependencies": {

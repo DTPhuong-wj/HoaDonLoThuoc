@@ -1,257 +1,314 @@
 import React, { useState, useEffect } from 'react';
-import { X, Package, Check, AlertCircle } from 'lucide-react';
-import type { Batch } from '../../types/pharmacy';
+import { X, Package, CheckCircle2, Circle, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import type { Batch, LabelColor } from '../../types/pharmacy';
 import { getTodayDateString } from '../../utils/formatters';
 
 interface BatchFormModalProps {
   isOpen: boolean;
   batchToEdit?: Batch | null;
-  initialBatchNumber?: string;
   onSave: (data: {
     batchNumber: string;
-    batchName: string;
-    supplier: string;
+    batchNames: string[];
+    labelColor: LabelColor;
     importDate: string;
-    notes?: string;
-    createInvoiceImmediately?: boolean;
   }) => void;
   onClose: () => void;
 }
 
-const COMMON_SUPPLIERS = [
-  'Dược Hậu Giang (DHG Pharma)',
-  'Sanofi-Aventis Việt Nam',
-  'Công ty CP Dược phẩm Imexpharm',
-  'Công ty Cổ phần Traphaco',
-  'Công ty TNHH LD Stellapharm',
-  'Công ty CP Dược phẩm Nam Hà',
-];
-
 export const BatchFormModal: React.FC<BatchFormModalProps> = ({
   isOpen,
   batchToEdit,
-  initialBatchNumber = '',
   onSave,
   onClose,
 }) => {
   const [batchNumber, setBatchNumber] = useState('');
-  const [batchName, setBatchName] = useState('');
-  const [supplier, setSupplier] = useState('');
+  // Danh sách các tên thuốc tách riêng (mỗi tên 1 ô)
+  const [medicineNames, setMedicineNames] = useState<string[]>(['']);
+  const [labelColor, setLabelColor] = useState<LabelColor>('green');
   const [importDate, setImportDate] = useState(getTodayDateString());
-  const [notes, setNotes] = useState('');
-  const [createInvoiceImmediately, setCreateInvoiceImmediately] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (batchToEdit) {
       setBatchNumber(batchToEdit.batchNumber);
-      setBatchName(batchToEdit.batchName);
-      setSupplier(batchToEdit.supplier);
-      setImportDate(batchToEdit.importDate);
-      setNotes(batchToEdit.notes || '');
-      setCreateInvoiceImmediately(false);
+      setMedicineNames([batchToEdit.batchName]);
+      setLabelColor(batchToEdit.labelColor || 'green');
+      setImportDate(batchToEdit.importDate || getTodayDateString());
       setError(null);
     } else {
-      setBatchNumber(initialBatchNumber || '');
-      setBatchName('');
-      setSupplier('');
+      setBatchNumber('');
+      setMedicineNames(['']);
+      setLabelColor('green');
       setImportDate(getTodayDateString());
-      setNotes('');
-      setCreateInvoiceImmediately(false);
       setError(null);
     }
-  }, [batchToEdit, initialBatchNumber, isOpen]);
+  }, [batchToEdit, isOpen]);
 
   if (!isOpen) return null;
 
+  // Thêm một ô tên thuốc mới
+  const handleAddMedicineRow = () => {
+    setMedicineNames((prev) => [...prev, '']);
+  };
+
+  // Cập nhật tên thuốc tại dòng index
+  const handleMedicineChange = (index: number, value: string) => {
+    setMedicineNames((prev) => {
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
+    });
+    if (error) setError(null);
+  };
+
+  // Xóa một ô tên thuốc
+  const handleRemoveMedicineRow = (index: number) => {
+    if (medicineNames.length <= 1) {
+      setMedicineNames(['']);
+      return;
+    }
+    setMedicineNames((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Hỗ trợ người dùng dán danh sách nhiều tên thuốc cách nhau bằng xuống dòng hoặc phẩy
+  const handlePasteMedicine = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (text.includes('\n') || text.includes(',')) {
+      e.preventDefault();
+      const items = text
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (items.length > 0) {
+        setMedicineNames((prev) => {
+          const updated = [...prev];
+          updated.splice(index, 1, ...items);
+          return updated;
+        });
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    const trimmedNumber = batchNumber.trim();
-    if (!trimmedNumber) {
-      setError('Vui lòng nhập số lô thuốc.');
+    if (!batchNumber.trim()) {
+      setError('Vui lòng nhập Lô thuốc');
       return;
     }
 
-    if (!supplier.trim()) {
-      setError('Vui lòng nhập hoặc chọn nhà cung cấp.');
+    const validNames = medicineNames.map((n) => n.trim()).filter((n) => n.length > 0);
+    if (validNames.length === 0) {
+      setError('Vui lòng nhập ít nhất 1 Tên thuốc');
+      return;
+    }
+
+    if (!importDate) {
+      setError('Vui lòng chọn Ngày nhập');
       return;
     }
 
     onSave({
-      batchNumber: trimmedNumber,
-      batchName: batchName.trim() || `Lô ${trimmedNumber}`,
-      supplier: supplier.trim(),
+      batchNumber: batchNumber.trim(),
+      batchNames: validNames,
+      labelColor,
       importDate,
-      notes: notes.trim(),
-      createInvoiceImmediately: !batchToEdit && createInvoiceImmediately,
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-      >
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-emerald-50/40">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+        <div className="px-6 py-5 bg-gradient-to-r from-emerald-800 to-teal-800 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white">
               <Package size={20} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">
-                {batchToEdit ? 'Chỉnh sửa Lô thuốc' : 'Thêm Lô thuốc Mới'}
+              <h3 className="text-base sm:text-lg font-bold">
+                {batchToEdit ? 'Chỉnh sửa dòng thuốc' : 'Thêm Lô thuốc Mới'}
               </h3>
-              <p className="text-xs text-slate-500">
-                {batchToEdit ? `Cập nhật thông tin lô: ${batchToEdit.batchNumber}` : 'Nhập thông tin lô thuốc vừa nhập kho'}
+              <p className="text-xs text-emerald-100">
+                {batchToEdit
+                  ? 'Cập nhật thông tin dòng thuốc'
+                  : 'Tên thuốc được tách riêng từng dòng trên Sheet để dễ quản lý'}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 rounded-xl text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {error && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-xs text-rose-700">
+              <AlertCircle size={16} className="shrink-0 text-rose-600" />
+              <span>{error}</span>
+            </div>
+          )}
 
-            {/* Số lô */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Số lô thuốc <span className="text-rose-500">*</span>
+          {/* 1. Lô thuốc */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+              <span>Lô thuốc</span>
+              <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={batchNumber}
+              onChange={(e) => {
+                setBatchNumber(e.target.value);
+                if (error) setError(null);
+              }}
+              placeholder="Ví dụ: LO-DHG-01, LO-2026-02..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm font-mono font-semibold"
+              autoFocus
+            />
+          </div>
+
+          {/* 2. Danh sách Tên thuốc (TÁCH RIÊNG TỪNG CÁI ĐỂ LƯU TỪNG DÒNG TRÊN SHEET) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>Tên thuốc (tách riêng từng dòng)</span>
+                <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={batchNumber}
-                onChange={(e) => setBatchNumber(e.target.value.toUpperCase())}
-                placeholder="VD: LO-DHG-202601 hoặc LO-PARA-24"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold tracking-wide text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-colors uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal"
-                autoFocus
-              />
-              <p className="mt-1 text-[11px] text-slate-400">
-                Mỗi lô thuốc phải có số lô duy nhất để phục vụ tra cứu và kiểm định.
-              </p>
+              {!batchToEdit && (
+                <button
+                  type="button"
+                  onClick={handleAddMedicineRow}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline"
+                >
+                  <Plus size={14} />
+                  <span>+ Thêm tên thuốc</span>
+                </button>
+              )}
             </div>
 
-            {/* Tên lô / Mô tả */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Tên thuốc chính hoặc mô tả lô
-              </label>
-              <input
-                type="text"
-                value={batchName}
-                onChange={(e) => setBatchName(e.target.value)}
-                placeholder="VD: Hapacol 650mg & Kháng sinh Klamentin"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-colors"
-              />
-            </div>
-
-            {/* Nhà cung cấp */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Nhà cung cấp <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={supplier}
-                onChange={(e) => setSupplier(e.target.value)}
-                placeholder="VD: Dược Hậu Giang (DHG Pharma)"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-colors"
-              />
-              {/* Quick Supplier Chips */}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {COMMON_SUPPLIERS.slice(0, 4).map((sup) => (
-                  <button
-                    key={sup}
-                    type="button"
-                    onClick={() => setSupplier(sup)}
-                    className="text-[11px] px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-colors"
-                  >
-                    + {sup.split('(')[0].trim()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Ngày nhập kho */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Ngày nhập kho <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={importDate}
-                onChange={(e) => setImportDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-colors"
-              />
-            </div>
-
-            {/* Ghi chú */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Ghi chú tình trạng / bảo quản
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-                placeholder="VD: Hàng bảo quản nhiệt độ thường, thùng nguyên niêm phong..."
-                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-colors resize-none"
-              />
-            </div>
-
-            {/* Option to create invoice immediately (only when creating new batch) */}
-            {!batchToEdit && (
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 cursor-pointer hover:bg-emerald-50 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={createInvoiceImmediately}
-                  onChange={(e) => setCreateInvoiceImmediately(e.target.checked)}
-                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                />
-                <div className="text-xs">
-                  <span className="font-semibold text-emerald-900 block">
-                    Tạo ngay hóa đơn cho lô này sau khi lưu
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {medicineNames.map((name, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <span className="w-6 text-center text-xs font-mono font-bold text-slate-400">
+                    {index + 1}.
                   </span>
-                  <span className="text-slate-500">
-                    Hệ thống sẽ mở form nhập chi tiết danh sách thuốc và giá tiền ngay sau đó.
-                  </span>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => handleMedicineChange(index, e.target.value)}
+                    onPaste={(e) => handlePasteMedicine(index, e)}
+                    placeholder={index === 0 ? "Ví dụ: Hapacol 650mg" : "Tên thuốc tiếp theo..."}
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm font-semibold"
+                  />
+                  {!batchToEdit && medicineNames.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMedicineRow(index)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Xóa dòng thuốc này"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
-              </label>
+              ))}
+            </div>
+
+            {!batchToEdit && (
+              <p className="text-[11px] text-slate-400">
+                Mỗi tên thuốc sẽ được lưu thành <strong>1 dòng riêng biệt</strong> trên Google Sheet với cùng lô thuốc này.
+              </p>
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50/80 border-t border-slate-100">
+          {/* 3. Phân loại: Nhãn */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+              <span>Nhãn</span>
+              <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setLabelColor('green')}
+                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${
+                  labelColor === 'green'
+                    ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                    labelColor === 'green' ? 'text-emerald-600' : 'text-slate-300'
+                  }`}
+                >
+                  <CheckCircle2 size={20} />
+                </div>
+                <div>
+                  <div className="text-xs sm:text-sm font-bold text-emerald-900">Nhãn xanh</div>
+                  <div className="text-[11px] text-emerald-700/80">Lô nhãn xanh</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLabelColor('white')}
+                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${
+                  labelColor === 'white'
+                    ? 'border-slate-800 bg-slate-50 text-slate-900 shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                    labelColor === 'white' ? 'text-slate-800' : 'text-slate-300'
+                  }`}
+                >
+                  <Circle size={20} />
+                </div>
+                <div>
+                  <div className="text-xs sm:text-sm font-bold text-slate-800">Nhãn trắng</div>
+                  <div className="text-[11px] text-slate-500">Lô nhãn trắng</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* 4. Ngày nhập */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+              <span>Ngày nhập</span>
+              <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={importDate}
+              onChange={(e) => setImportDate(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm font-semibold text-slate-800"
+            />
+          </div>
+
+          {/* Form Actions */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-white hover:border-slate-300 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs sm:text-sm font-semibold transition-colors"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-xs transition-colors flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
-              <Check size={16} strokeWidth={2.5} />
-              <span>{batchToEdit ? 'Lưu thay đổi' : 'Thêm lô thuốc'}</span>
+              {batchToEdit ? 'Lưu thay đổi' : `Lưu (${medicineNames.filter((n) => n.trim().length > 0).length || 1} thuốc)`}
             </button>
           </div>
         </form>

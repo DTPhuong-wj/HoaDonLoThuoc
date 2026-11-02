@@ -1,69 +1,66 @@
-export interface InvoiceItem {
-  id: string;
-  medicineName: string;
-  specification: string; // Hàm lượng hoặc quy cách đóng gói (vd: Hộp 10 vỉ x 10 viên, Lọ 100ml)
-  unit: string; // Đơn vị tính (Hộp, Lọ, Vỉ, Ống, Chai, Gói)
-  quantity: number;
-  unitPrice: number; // Đơn giá (VNĐ)
-  amount: number; // Thành tiền = quantity * unitPrice
-  notes?: string;
-}
+export type LabelColor = 'green' | 'white';
 
-export type ExpenseCategory = 'shipping' | 'handling' | 'storage' | 'inspection' | 'other';
-
-export interface ExpenseItem {
-  id: string;
-  expenseName: string; // Phí vận chuyển, Phí bốc xếp, Phí bảo quản lạnh, Phụ phí khác...
-  category: ExpenseCategory;
-  amount: number; // Số tiền (VNĐ >= 0)
-  notes?: string;
-}
-
-export interface Invoice {
-  id: string;
-  invoiceNumber: string; // Mã hóa đơn (vd: HD-2026-0012)
-  invoiceDate: string; // Ngày lập hóa đơn (YYYY-MM-DD)
-  batchId: string; // ID lô thuốc liên kết
-  batchNumber: string; // Số lô thuốc liên kết
-  items: InvoiceItem[];
-  expenses: ExpenseItem[];
-  preExpenseTotal: number; // Tổng tiền trước chi phí (= tổng thành tiền các loại thuốc)
-  expensesTotal: number; // Tổng chi phí phát sinh
-  postExpenseTotal: number; // Tổng tiền sau chi phí (= trước chi phí + chi phí phát sinh)
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+/**
+ * Thực thể Lô thuốc chính (Khớp chính xác 5 cột trên Google Sheets)
+ * 1. stt
+ * 2. lô thuốc (batchNumber)
+ * 3. tên thuốc (batchName) - tách riêng từng dòng
+ * 4. nhãn (labelColor: 'green' -> Nhãn xanh, 'white' -> Nhãn trắng)
+ * 5. ngày nhập (importDate)
+ */
 export interface Batch {
-  id: string;
-  batchNumber: string; // Số lô thuốc (Duy nhất, bắt buộc, vd: LO-DHG-202601)
-  batchName: string; // Tên thuốc chính hoặc mô tả lô thuốc
-  supplier: string; // Nhà cung cấp (DHG, Sanofi, Imexpharm...)
-  importDate: string; // Ngày nhập kho (YYYY-MM-DD)
-  notes?: string;
-  hasInvoice: boolean; // Trạng thái: true = Đã có hóa đơn, false = Chưa có hóa đơn
-  invoiceId?: string; // ID hóa đơn liên kết (nếu có)
-  invoiceNumber?: string; // Mã hóa đơn (nếu có)
+  id: string; // ID hệ thống duy nhất (batch_...)
+  batchNumber: string; // Lô thuốc
+  batchName: string; // Tên thuốc (tách riêng từng cái)
+  labelColor: LabelColor; // 'green' -> Nhãn xanh | 'white' -> Nhãn trắng
+  importDate: string; // Ngày nhập (YYYY-MM-DD)
+  status: 'active' | 'deleted';
   createdAt: string;
   updatedAt: string;
 }
 
-export interface BatchWithInvoice extends Batch {
-  invoice?: Invoice;
-  itemCount: number;
-  preExpenseTotal: number;
-  expensesTotal: number;
-  postExpenseTotal: number;
-}
+export type BatchWithInvoice = Batch;
 
+/**
+ * Thống kê:
+ * 1. Tổng số dòng thuốc / lô thuốc
+ * 2. Tổng có nhãn xanh
+ * 3. Tổng có nhãn trắng
+ */
 export interface BatchStatistics {
   totalBatches: number;
-  withInvoiceCount: number;
-  withoutInvoiceCount: number;
-  totalLandedExpense: number; // Tổng tiền sau chi phí của tất cả lô đã có hóa đơn
-  totalPreExpense: number;
-  totalExpenses: number;
+  greenLabelCount: number;
+  whiteLabelCount: number;
 }
 
-export type InvoiceStatusFilter = 'all' | 'has_invoice' | 'no_invoice';
+export type BatchFilterType = 'all' | 'green' | 'white';
+
+export type SyncAction = 'CREATE_LOT' | 'UPDATE_LOT' | 'DELETE_LOT';
+
+export interface SyncEvent {
+  id: string;
+  eventId: string;
+  action: SyncAction;
+  lotId: string;
+  timestamp: string;
+  payload: {
+    stt?: number;
+    batchNumber: string;
+    batchName?: string;
+    batchNames?: string[]; // Hỗ trợ lưu danh sách tên thuốc tách dòng
+    labelColor: string;
+    importDate: string;
+    oldBatchNumber?: string;
+    oldBatchName?: string;
+  };
+  status: 'pending' | 'synced' | 'failed';
+  retryCount: number;
+  lastAttempt?: string;
+  errorMessage?: string;
+}
+
+export interface SystemSettings {
+  googleAppsScriptUrl: string;
+  sheetsSyncSecret: string;
+  defaultUser: string;
+}
