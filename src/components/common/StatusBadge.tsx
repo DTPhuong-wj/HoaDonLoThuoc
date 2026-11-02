@@ -9,7 +9,7 @@ interface LabelColorBadgeProps {
 }
 
 /**
- * Huy hiệu phân loại nhãn lô thuốc:
+ * Huy hiệu phân loại nhãn lô  :
  * - 'green': Nhãn xanh (Nền xanh lá nhẹ, chữ xanh lá đậm, viền xanh lá)
  * - 'white': Nhãn trắng (Nền trắng, viền xám nhạt sắc nét, chữ xám đen)
  */

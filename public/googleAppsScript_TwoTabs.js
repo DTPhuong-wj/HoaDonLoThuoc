@@ -1,14 +1,14 @@
 /**
  * ====================================================================
- * GOOGLE APPS SCRIPT: QUẢN LÝ LÔ THUỐC
+ * GOOGLE APPS SCRIPT: QUẢN LÝ LÔ  
  * BẢNG SHEET CHỈ GỒM ĐÚNG 5 CỘT THEO YÊU CẦU:
  * 1. stt
- * 2. lô thuốc
- * 3. tên thuốc
+ * 2. lô  
+ * 3. tên  
  * 4. nhãn
  * 5. ngày nhập
  * 
- * TÊN THUỐC ĐƯỢC TÁCH RA TỪNG DÒNG RIÊNG BIỆT (KHÔNG GỘP)
+ * TÊN   ĐƯỢC TÁCH RA TỪNG DÒNG RIÊNG BIỆT (KHÔNG GỘP)
  * ====================================================================
  */
 
@@ -20,8 +20,8 @@ const SYNC_SECRET_TOKEN = "mint_pharma_secure_sync_secret_token_2026";
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('🏥 Quản lý Lô thuốc')
-    .addItem('1. Khởi tạo Bảng 5 Cột chuẩn (stt, lô thuốc, tên thuốc, nhãn, ngày nhập)', 'setupSheet')
+  ui.createMenu('🏥 Quản lý Lô  ')
+    .addItem('1. Khởi tạo Bảng 5 Cột chuẩn (stt, lô  , tên  , nhãn, ngày nhập)', 'setupSheet')
     .addItem('2. Đánh lại Số thứ tự (stt)', 'renumberSTT')
     .addToUi();
 }
@@ -29,8 +29,8 @@ function onOpen() {
 /**
  * KHỞI TẠO BẢNG 5 CỘT CHUẨN:
  * A: stt
- * B: lô thuốc
- * C: tên thuốc
+ * B: lô  
+ * C: tên  
  * D: nhãn
  * E: ngày nhập
  */
@@ -44,8 +44,8 @@ function setupSheet() {
 
   const headers = [
     "stt",        // Cột A
-    "lô thuốc",   // Cột B
-    "tên thuốc",  // Cột C
+    "lô  ",   // Cột B
+    "tên  ",  // Cột C
     "nhãn",       // Cột D
     "ngày nhập"   // Cột E
   ];
@@ -53,18 +53,18 @@ function setupSheet() {
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   const headerRange = sheet.getRange(1, 1, 1, headers.length);
   headerRange.setFontWeight("bold")
-             .setFontColor("#ffffff")
-             .setBackground("#065f46") // Xanh lá đậm chuẩn ngành Dược
-             .setHorizontalAlignment("center")
-             .setVerticalAlignment("middle")
-             .setFontSize(11);
+    .setFontColor("#ffffff")
+    .setBackground("#065f46") // Xanh lá đậm chuẩn ngành Dược
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setFontSize(11);
 
   sheet.setRowHeight(1, 38);
   sheet.setFrozenRows(1);
 
   sheet.setColumnWidth(1, 70);  // stt
-  sheet.setColumnWidth(2, 170); // lô thuốc
-  sheet.setColumnWidth(3, 280); // tên thuốc
+  sheet.setColumnWidth(2, 170); // lô  
+  sheet.setColumnWidth(3, 280); // tên  
   sheet.setColumnWidth(4, 150); // nhãn
   sheet.setColumnWidth(5, 130); // ngày nhập
 
@@ -76,10 +76,10 @@ function setupSheet() {
 
   SpreadsheetApp.getUi().alert(
     "KHỞI TẠO THÀNH CÔNG!",
-    "Bảng Quản lý Lô thuốc gồm đúng 5 cột:\n" +
+    "Bảng Quản lý Lô   gồm đúng 5 cột:\n" +
     "1. stt\n" +
-    "2. lô thuốc\n" +
-    "3. tên thuốc (tách từng dòng riêng biệt)\n" +
+    "2. lô  \n" +
+    "3. tên   (tách từng dòng riêng biệt)\n" +
     "4. nhãn\n" +
     "5. ngày nhập",
     SpreadsheetApp.getUi().ButtonSet.OK
@@ -151,22 +151,22 @@ function doPost(e) {
       sheet = ss.getSheetByName(TAB_NAME);
     }
 
-    // 1. THÊM LÔ THUỐC: TÁCH TỪNG TÊN THUỐC THÀNH TỪNG DÒNG RIÊNG BIỆT TRONG SHEET
+    // 1. THÊM LÔ  : TÁCH TỪNG TÊN   THÀNH TỪNG DÒNG RIÊNG BIỆT TRONG SHEET
     if (action === "CREATE_LOT") {
       const batchNumber = String(payload.batchNumber || "").trim();
       const labelColor = String(payload.labelColor || "Nhãn xanh").trim();
       const importDate = String(payload.importDate || "").trim();
 
-      // Hỗ trợ cả mảng tên thuốc (tách riêng) hoặc 1 tên thuốc
+      // Hỗ trợ cả mảng tên   (tách riêng) hoặc 1 tên  
       let medicines = [];
       if (Array.isArray(payload.batchNames) && payload.batchNames.length > 0) {
-        medicines = payload.batchNames.map(function(m) { return String(m).trim(); }).filter(Boolean);
+        medicines = payload.batchNames.map(function (m) { return String(m).trim(); }).filter(Boolean);
       } else if (payload.batchName) {
         medicines = [String(payload.batchName).trim()];
       }
 
       if (medicines.length === 0) {
-        medicines = ["Thuốc chưa đặt tên"];
+        medicines = ["  chưa đặt tên"];
       }
 
       let lastRow = sheet.getLastRow();
@@ -189,10 +189,10 @@ function doPost(e) {
       }
 
       renumberSTT();
-      return createJsonResponse(true, "Đã lưu " + medicines.length + " tên thuốc thành từng dòng riêng trên Google Sheets", 200);
+      return createJsonResponse(true, "Đã lưu " + medicines.length + " tên   thành từng dòng riêng trên Google Sheets", 200);
     }
 
-    // 2. CẬP NHẬT TỪNG DÒNG THUỐC
+    // 2. CẬP NHẬT TỪNG DÒNG  
     if (action === "UPDATE_LOT") {
       const targetBatchNumber = String(payload.oldBatchNumber || payload.batchNumber || "").trim();
       const targetBatchName = String(payload.oldBatchName || payload.batchName || "").trim();
@@ -232,12 +232,12 @@ function doPost(e) {
           sheet.getRange(foundRow, 4).setFontColor("#475569").setFontWeight("bold");
         }
 
-        return createJsonResponse(true, "Đã cập nhật dòng thuốc trên Google Sheets", 200);
+        return createJsonResponse(true, "Đã cập nhật dòng   trên Google Sheets", 200);
       } else {
         const stt = lastRow;
         sheet.appendRow([stt, newBatchNumber, newBatchName, newLabelColor, newImportDate]);
         renumberSTT();
-        return createJsonResponse(true, "Đã thêm mới dòng thuốc vào Google Sheets", 200);
+        return createJsonResponse(true, "Đã thêm mới dòng   vào Google Sheets", 200);
       }
     }
 
@@ -256,7 +256,7 @@ function doPost(e) {
 }
 
 /**
- * Phản hồi GET: Nạp danh sách các dòng thuốc từ Google Sheet về Web
+ * Phản hồi GET: Nạp danh sách các dòng   từ Google Sheet về Web
  */
 function doGet(e) {
   try {
@@ -289,7 +289,7 @@ function doGet(e) {
           batches.push({
             id: "sheet_row_" + (i + 1) + "_" + (batchNumber ? batchNumber.replace(/[^a-zA-Z0-9]/g, "_") : i),
             batchNumber: batchNumber || ("LO-" + (i + 1)),
-            batchName: batchName || "Thuốc",
+            batchName: batchName || " ",
             labelColor: labelColor,
             importDate: importDateStr,
             status: "active",
@@ -303,7 +303,7 @@ function doGet(e) {
     return ContentService.createTextOutput(
       JSON.stringify({
         success: true,
-        columns: ["stt", "lô thuốc", "tên thuốc", "nhãn", "ngày nhập"],
+        columns: ["stt", "lô  ", "tên  ", "nhãn", "ngày nhập"],
         batches: batches,
         total: batches.length,
         timestamp: new Date().toISOString()

@@ -22,7 +22,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
   onClose,
 }) => {
   const [batchNumber, setBatchNumber] = useState('');
-  // Danh sách các tên thuốc tách riêng (mỗi tên 1 ô)
+  // Danh sách các tên   tách riêng (mỗi tên 1 ô)
   const [medicineNames, setMedicineNames] = useState<string[]>(['']);
   const [labelColor, setLabelColor] = useState<LabelColor>('green');
   const [importDate, setImportDate] = useState(getTodayDateString());
@@ -46,12 +46,12 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Thêm một ô tên thuốc mới
+  // Thêm một ô tên   mới
   const handleAddMedicineRow = () => {
     setMedicineNames((prev) => [...prev, '']);
   };
 
-  // Cập nhật tên thuốc tại dòng index
+  // Cập nhật tên   tại dòng index
   const handleMedicineChange = (index: number, value: string) => {
     setMedicineNames((prev) => {
       const updated = [...prev];
@@ -61,7 +61,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
     if (error) setError(null);
   };
 
-  // Xóa một ô tên thuốc
+  // Xóa một ô tên  
   const handleRemoveMedicineRow = (index: number) => {
     if (medicineNames.length <= 1) {
       setMedicineNames(['']);
@@ -70,7 +70,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
     setMedicineNames((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Hỗ trợ người dùng dán danh sách nhiều tên thuốc cách nhau bằng xuống dòng hoặc phẩy
+  // Hỗ trợ người dùng dán danh sách nhiều tên   cách nhau bằng xuống dòng hoặc phẩy
   const handlePasteMedicine = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text');
     if (text.includes('\n') || text.includes(',')) {
@@ -155,7 +155,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
             </div>
           )}
 
-          {/* 1. Lô thuốc */}
+          {/* 1. Lô   */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
               <span>Lô</span>
@@ -174,7 +174,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
             />
           </div>
 
-          {/* 2. Danh sách Tên thuốc (TÁCH RIÊNG TỪNG CÁI ĐỂ LƯU TỪNG DÒNG TRÊN SHEET) */}
+          {/* 2. Danh sách Tên   (TÁCH RIÊNG TỪNG CÁI ĐỂ LƯU TỪNG DÒNG TRÊN SHEET) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
@@ -204,7 +204,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                     value={name}
                     onChange={(e) => handleMedicineChange(index, e.target.value)}
                     onPaste={(e) => handlePasteMedicine(index, e)}
-                    placeholder={index === 0 ? "Ví dụ: Hapacol 650mg" : "Tên thuốc tiếp theo..."}
+                    placeholder={index === 0 ? "Ví dụ: Hapacol 650mg" : "Tên   tiếp theo..."}
                     className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm font-semibold"
                   />
                   {!batchToEdit && medicineNames.length > 1 && (
@@ -212,7 +212,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                       type="button"
                       onClick={() => handleRemoveMedicineRow(index)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="Xóa dòng thuốc này"
+                      title="Xóa dòng   này"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -223,7 +223,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
 
             {!batchToEdit && (
               <p className="text-[11px] text-slate-400">
-                Mỗi tên sẽ được lưu thành <strong>1 dòng riêng biệt</strong> trên Google Sheet với cùng lô thuốc này.
+                Mỗi tên sẽ được lưu thành <strong>1 dòng riêng biệt</strong> trên Google Sheet với cùng lô   này.
               </p>
             )}
           </div>
@@ -239,8 +239,8 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                 type="button"
                 onClick={() => setLabelColor('green')}
                 className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${labelColor === 'green'
-                    ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900 shadow-xs'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900 shadow-xs'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                   }`}
               >
                 <div
@@ -259,8 +259,8 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                 type="button"
                 onClick={() => setLabelColor('white')}
                 className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${labelColor === 'white'
-                    ? 'border-slate-800 bg-slate-50 text-slate-900 shadow-xs'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  ? 'border-slate-800 bg-slate-50 text-slate-900 shadow-xs'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                   }`}
               >
                 <div
@@ -304,7 +304,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               type="submit"
               className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
-              {batchToEdit ? 'Lưu thay đổi' : `Lưu (${medicineNames.filter((n) => n.trim().length > 0).length || 1} thuốc)`}
+              {batchToEdit ? 'Lưu thay đổi' : `Lưu (${medicineNames.filter((n) => n.trim().length > 0).length || 1}  )`}
             </button>
           </div>
         </form>

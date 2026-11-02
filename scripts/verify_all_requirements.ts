@@ -1,17 +1,17 @@
 /**
  * Automated Verification Script for Phase 4 Test Scenarios
  * Tests:
- * 1. Thêm lô thuốc mới
+ * 1. Thêm lô   mới
  * 2. Kiểm tra dữ liệu xuất hiện ở cả hai tab
- * 3. Sửa tên thuốc
+ * 3. Sửa tên  
  * 4. Kiểm tra tab BAN_DAU không thay đổi
  * 5. Kiểm tra tab HIEN_TAI được cập nhật
  * 6. Sửa số lượng nhiều lần
  * 7. Cập nhật thông tin hóa đơn
- * 8. Xóa lô thuốc
+ * 8. Xóa lô  
  * 9. Kiểm tra tab BAN_DAU vẫn còn dữ liệu
  * 10. Kiểm tra tab HIEN_TAI chuyển sang Đã xóa
- * 11. Thêm lại một lô thuốc
+ * 11. Thêm lại một lô  
  * 12. Kiểm tra không bị ghi trùng (Idempotency)
  * 13. Giả lập lỗi kết nối
  * 14. Thử đồng bộ lại
@@ -45,8 +45,8 @@ class MockLocalStorage {
 const mockStorage = new MockLocalStorage();
 (globalThis as any).localStorage = mockStorage;
 (globalThis as any).window = {
-  addEventListener: () => {},
-  removeEventListener: () => {},
+  addEventListener: () => { },
+  removeEventListener: () => { },
   dispatchEvent: () => true,
 };
 
@@ -227,7 +227,7 @@ async function runVerification() {
     }
   }
 
-  // TEST 1: Thêm lô thuốc mới
+  // TEST 1: Thêm lô   mới
   const lotId1 = 'LOT-TEST-001';
   const initialSnapshot1: InitialBatchSnapshot = {
     recordId: 'rec_' + lotId1,
@@ -275,7 +275,7 @@ async function runVerification() {
   };
 
   gas.processPost(createEvent1);
-  assert(gas.tabBanDau.length === 1 && gas.tabHienTai.length === 1, 1, 'Thêm lô thuốc mới', 'Event CREATE_LOT được xử lý thành công');
+  assert(gas.tabBanDau.length === 1 && gas.tabHienTai.length === 1, 1, 'Thêm lô   mới', 'Event CREATE_LOT được xử lý thành công');
 
   // TEST 2: Kiểm tra dữ liệu xuất hiện ở cả hai tab
   const inBanDau1 = gas.tabBanDau.find(r => r.lotId === lotId1);
@@ -287,7 +287,7 @@ async function runVerification() {
     `BAN_DAU: ${inBanDau1?.quantity} | HIEN_TAI: ${inHienTai1?.quantity} | Cùng lô: ${lotId1}`
   );
 
-  // TEST 3: Sửa tên thuốc
+  // TEST 3: Sửa tên  
   const updateEventName: SyncEvent = {
     eventId: 'evt_update_name_002',
     action: 'UPDATE_LOT',
@@ -305,8 +305,8 @@ async function runVerification() {
   assert(
     gas.tabHienTai.find(r => r.lotId === lotId1)?.batchName === 'Paracetamol Extra 500mg + Cafein',
     3,
-    'Sửa tên thuốc',
-    'Tên thuốc trên tab HIEN_TAI đã đổi thành Paracetamol Extra 500mg + Cafein'
+    'Sửa tên  ',
+    'Tên   trên tab HIEN_TAI đã đổi thành Paracetamol Extra 500mg + Cafein'
   );
 
   // TEST 4: Kiểm tra tab BAN_DAU không thay đổi khi sửa tên
@@ -314,7 +314,7 @@ async function runVerification() {
   assert(
     banDauAfterName?.batchName === 'Paracetamol 500mg Kháng Viêm',
     4,
-    'Kiểm tra tab BAN_DAU không thay đổi khi sửa tên thuốc',
+    'Kiểm tra tab BAN_DAU không thay đổi khi sửa tên  ',
     `BAN_DAU vẫn giữ nguyên: "${banDauAfterName?.batchName}" (Bất biến)`
   );
 
@@ -386,7 +386,7 @@ async function runVerification() {
     `HIEN_TAI: "Đã có hóa đơn" (Số: HD-2026-9999) | BAN_DAU: vẫn "Chưa có hóa đơn"`
   );
 
-  // TEST 8: Xóa lô thuốc
+  // TEST 8: Xóa lô  
   gas.processPost({
     eventId: 'evt_del_001',
     action: 'DELETE_LOT',
@@ -397,7 +397,7 @@ async function runVerification() {
     retryCount: 0,
     createdAt: '2026-11-01T15:00:00Z',
   });
-  assert(true, 8, 'Xóa lô thuốc', 'Thực hiện lệnh xóa mềm lô thuốc trên hệ thống');
+  assert(true, 8, 'Xóa lô  ', 'Thực hiện lệnh xóa mềm lô   trên hệ thống');
 
   // TEST 9: Kiểm tra tab BAN_DAU vẫn còn dữ liệu
   const banDauAfterDel = gas.tabBanDau.find(r => r.lotId === lotId1);
@@ -419,7 +419,7 @@ async function runVerification() {
     `Trạng thái cột 18: "${hienTaiAfterDel?.status}", deletedAt: "${hienTaiAfterDel?.deletedAt}"`
   );
 
-  // TEST 11: Thêm lại một lô thuốc mới
+  // TEST 11: Thêm lại một lô   mới
   const lotId2 = 'LOT-TEST-002';
   const init2: InitialBatchSnapshot = {
     recordId: 'rec_' + lotId2,
@@ -458,7 +458,7 @@ async function runVerification() {
   assert(
     gas.tabBanDau.length === 2 && gas.tabHienTai.length === 2,
     11,
-    'Thêm lại một lô thuốc',
+    'Thêm lại một lô  ',
     `Thêm mới lô thứ 2 thành công. BAN_DAU: 2 dòng, HIEN_TAI: 2 dòng`
   );
 

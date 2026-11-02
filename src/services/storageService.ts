@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_SETTINGS: SystemSettings = {
-  googleAppsScriptUrl: '',
+  googleAppsScriptUrl: 'https://script.google.com/macros/s/AKfycbzohYVvWBSw_VqAmmdCMZvqjyqryq7nKmTMdh-rvlQQi85vQXK3AoFq-ow7KgmjyZyK/exec',
   sheetsSyncSecret: 'mint_pharma_secure_sync_secret_token_2026',
   defaultUser: 'Dược sĩ quản lý kho',
 };
@@ -79,7 +79,7 @@ export class StorageService {
       if (typeof window === 'undefined') return DEFAULT_SETTINGS;
       const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-    } catch {}
+    } catch { }
     return DEFAULT_SETTINGS;
   }
 

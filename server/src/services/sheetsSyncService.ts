@@ -36,7 +36,7 @@ class SheetsSyncService {
     }, 5000);
 
     // Chạy ngay lần đầu
-    this.processQueue().catch(() => {});
+    this.processQueue().catch(() => { });
   }
 
   public stopWorker(): void {
@@ -61,7 +61,7 @@ class SheetsSyncService {
         [item.entityType, item.entityId, item.action, JSON.stringify(item.payload)]
       );
       // Kích hoạt xử lý ngay
-      setImmediate(() => this.processQueue().catch(() => {}));
+      setImmediate(() => this.processQueue().catch(() => { }));
     } catch (err: any) {
       console.error('[Google Sheets Sync] Lỗi khi thêm vào hàng đợi:', err.message);
     }
@@ -190,7 +190,7 @@ class SheetsSyncService {
             [
               entityId,
               data.batch_number || data.batchNumber || entityId,
-              data.batch_name || data.batchName || 'Lô thuốc đồng bộ từ Sheets',
+              data.batch_name || data.batchName || 'Lô   đồng bộ từ Sheets',
               data.supplier || 'Chưa xác định',
               data.import_date || data.importDate || new Date().toISOString().split('T')[0],
               data.notes || '',
@@ -313,7 +313,7 @@ class SheetsSyncService {
   }
 
   /**
-   * Tính toán lại tổng tiền của hóa đơn sau khi thêm/sửa/xóa thuốc hoặc chi phí
+   * Tính toán lại tổng tiền của hóa đơn sau khi thêm/sửa/xóa   hoặc chi phí
    */
   public async recalculateInvoiceTotals(invoiceId: string): Promise<void> {
     const pool = getPool();

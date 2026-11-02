@@ -31,7 +31,7 @@ const MainAppContent: React.FC = () => {
     title: '',
     message: '',
     itemName: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const loadData = useCallback(() => {
@@ -58,7 +58,7 @@ const MainAppContent: React.FC = () => {
   const handleOpenCreateBatch = () => {
     if (!storageService.isSheetConnected()) {
       setSheetLinkModalOpen(true);
-      showToast('Vui lòng liên kết với Google Sheet trước khi thêm lô thuốc.', 'info');
+      showToast('Vui lòng liên kết với Google Sheet trước khi thêm lô  .', 'info');
       return;
     }
     setBatchToEdit(null);
@@ -84,7 +84,7 @@ const MainAppContent: React.FC = () => {
           labelColor: data.labelColor,
           importDate: data.importDate,
         });
-        showToast('Đã cập nhật thông tin dòng thuốc thành công!', 'success');
+        showToast('Đã cập nhật thông tin dòng   thành công!', 'success');
       } else {
         const res = await storageService.createBatches({
           batchNumber: data.batchNumber,
@@ -92,21 +92,21 @@ const MainAppContent: React.FC = () => {
           labelColor: data.labelColor,
           importDate: data.importDate,
         });
-        showToast(`Đã thêm ${res.count} tên thuốc vào lô ${data.batchNumber} thành công!`, 'success');
+        showToast(`Đã thêm ${res.count} tên   vào lô ${data.batchNumber} thành công!`, 'success');
       }
 
       setBatchModalOpen(false);
       loadData();
     } catch (err: any) {
-      showToast(err.message || 'Lỗi lưu thông tin lô thuốc', 'error');
+      showToast(err.message || 'Lỗi lưu thông tin lô  ', 'error');
     }
   };
 
   const handleDeleteBatch = (batch: Batch) => {
     setDeleteModalConfig({
       isOpen: true,
-      title: 'Xác nhận xóa dòng thuốc',
-      message: `Bạn có chắc chắn muốn xóa dòng thuốc "${batch.batchName}" thuộc lô "${batch.batchNumber}"? (Dữ liệu trên Google Sheet được giữ nguyên)`,
+      title: 'Xác nhận xóa dòng  ',
+      message: `Bạn có chắc chắn muốn xóa dòng   "${batch.batchName}" thuộc lô "${batch.batchNumber}"? (Dữ liệu trên Google Sheet được giữ nguyên)`,
       itemName: `${batch.batchNumber} - ${batch.batchName}`,
       onConfirm: async () => {
         // Tắt popup xác nhận xóa ngay lập tức
@@ -119,7 +119,7 @@ const MainAppContent: React.FC = () => {
           }
           loadData();
         } catch (err: any) {
-          showToast(err.message || 'Lỗi khi xóa dòng thuốc', 'error');
+          showToast(err.message || 'Lỗi khi xóa dòng  ', 'error');
         }
       },
     });
@@ -128,7 +128,7 @@ const MainAppContent: React.FC = () => {
   const handleSheetLinkSuccess = (count: number) => {
     setIsSheetConnected(true);
     loadData();
-    showToast(`Đã liên kết thành công với Google Sheet (${count} dòng thuốc)!`, 'success');
+    showToast(`Đã liên kết thành công với Google Sheet (${count} dòng  )!`, 'success');
   };
 
   return (

@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onBackFromDetail}
                 className="hover:text-emerald-700 hover:underline font-medium"
               >
-                Danh sách lô thuốc
+                Danh sách lô
               </button>
               <span>/</span>
               <span className="text-slate-800 font-bold">{selectedBatchNumber}</span>
@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Mai Thanh
               </span>
               <span className="text-[11px] text-emerald-700 font-semibold">
-                Quản lý Lô thuốc
+                Quản lý Lô
               </span>
             </div>
           )}
@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenSheetLink}
           title={isSheetConnected ? 'Đã liên kết với Google Sheet (bấm để xem hoặc đổi URL)' : 'Bấm để liên kết với Google Sheet'}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${isSheetConnected
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-              : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 animate-pulse'
+            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+            : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 animate-pulse'
             }`}
         >
           {isSheetConnected ? (
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors shrink-0"
         >
           <Plus size={16} />
-          <span>Thêm lô thuốc</span>
+          <span>Thêm lô  </span>
         </button>
       </div>
     </header>

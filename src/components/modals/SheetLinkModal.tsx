@@ -13,8 +13,10 @@ export const SheetLinkModal: React.FC<SheetLinkModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const settings = storageService.getSettings();
-  const [url, setUrl] = useState(settings.googleAppsScriptUrl || '');
+  // const settings = storageService.getSettings();
+  const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzohYVvWBSw_VqAmmdCMZvqjyqryq7nKmTMdh-rvlQQi85vQXK3AoFq-ow7KgmjyZyK/exec';
+  const [url, setUrl] = useState(GOOGLE_APPS_SCRIPT_URL);
+  // const [url, setUrl] = useState(settings.googleAppsScriptUrl || '');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -54,15 +56,15 @@ export const SheetLinkModal: React.FC<SheetLinkModalProps> = ({
 
   const handleCopyScriptCode = () => {
     const code = `/**
- * GOOGLE APPS SCRIPT: QUẢN LÝ LÔ THUỐC
- * 5 CỘT CHUẨN: stt, lô thuốc, tên thuốc, nhãn, ngày nhập
- * TÊN THUỐC TÁCH RIÊNG TỪNG DÒNG (KHÔNG GỘP)
+ * GOOGLE APPS SCRIPT: QUẢN LÝ LÔ  
+ * 5 CỘT CHUẨN: stt, lô  , tên  , nhãn, ngày nhập
+ * TÊN   TÁCH RIÊNG TỪNG DÒNG (KHÔNG GỘP)
  */
 const TAB_NAME = "QUAN_LY_LO_THUOC";
 const SYNC_SECRET_TOKEN = "mint_pharma_secure_sync_secret_token_2026";
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('🏥 Quản lý Lô thuốc')
+  SpreadsheetApp.getUi().createMenu('🏥 Quản lý Lô  ')
     .addItem('1. Khởi tạo Bảng 5 Cột chuẩn', 'setupSheet')
     .addItem('2. Đánh lại STT', 'renumberSTT')
     .addToUi();
@@ -71,7 +73,7 @@ function onOpen() {
 function setupSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(TAB_NAME) || ss.insertSheet(TAB_NAME);
-  const headers = ["stt", "lô thuốc", "tên thuốc", "nhãn", "ngày nhập"];
+  const headers = ["stt", "lô  ", "tên  ", "nhãn", "ngày nhập"];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setFontColor("#ffffff").setBackground("#065f46").setHorizontalAlignment("center");
   sheet.setRowHeight(1, 38);
@@ -104,7 +106,7 @@ function doPost(e) {
       const bNum = String(p.batchNumber || '').trim();
       const lColor = String(p.labelColor || 'Nhãn xanh').trim();
       const iDate = String(p.importDate || '').trim();
-      let meds = Array.isArray(p.batchNames) && p.batchNames.length > 0 ? p.batchNames : [p.batchName || 'Thuốc'];
+      let meds = Array.isArray(p.batchNames) && p.batchNames.length > 0 ? p.batchNames : [p.batchName || ' '];
 
       let last = sheet.getLastRow();
       for (let i = 0; i < meds.length; i++) {
@@ -187,7 +189,7 @@ function doGet(e) {
             <div>
               <h3 className="text-base sm:text-lg font-bold">Liên kết với Google Sheet</h3>
               <p className="text-xs text-emerald-100">
-                Kết nối tới Sheet trước khi thêm lô thuốc
+                Kết nối tới Sheet trước khi thêm lô
               </p>
             </div>
           </div>
@@ -204,11 +206,10 @@ function doGet(e) {
         <div className="p-6 space-y-5">
           {message && (
             <div
-              className={`p-3.5 rounded-2xl flex items-center gap-2.5 text-xs font-semibold border ${
-                message.isError
-                  ? 'bg-rose-50 border-rose-200 text-rose-800'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              }`}
+              className={`p-3.5 rounded-2xl flex items-center gap-2.5 text-xs font-semibold border ${message.isError
+                ? 'bg-rose-50 border-rose-200 text-rose-800'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                }`}
             >
               <AlertCircle size={16} className="shrink-0" />
               <span>{message.text}</span>

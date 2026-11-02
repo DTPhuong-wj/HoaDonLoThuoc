@@ -94,7 +94,7 @@ export const BatchDetailView: React.FC<BatchDetailViewProps> = ({
           </div>
         </div>
 
-        {/* 4 trường thông tin chuẩn theo yêu cầu: lô thuốc, tên thuốc, nhãn, ngày nhập */}
+        {/* 4 trường thông tin chuẩn theo yêu cầu: lô  , tên  , nhãn, ngày nhập */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
@@ -107,7 +107,7 @@ export const BatchDetailView: React.FC<BatchDetailViewProps> = ({
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-              2. Tên thuốc
+              2. Tên
             </div>
             <div className="text-base font-bold text-slate-900">
               {batch.batchName}

@@ -45,7 +45,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
   const greenCount = batches.filter((b) => b.labelColor === 'green').length;
   const whiteCount = batches.filter((b) => b.labelColor === 'white').length;
 
-  // Danh sách các mã lô thuốc độc nhất để lọc theo lô
+  // Danh sách các mã lô   độc nhất để lọc theo lô
   const uniqueBatchNumbers = useMemo(() => {
     const set = new Set<string>();
     batches.forEach((b) => {
@@ -63,10 +63,10 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
       if (filterLabel === 'green' && batch.labelColor !== 'green') return false;
       if (filterLabel === 'white' && batch.labelColor !== 'white') return false;
 
-      // 2. Lọc theo lô thuốc
+      // 2. Lọc theo lô  
       if (filterBatchNumber !== 'all' && batch.batchNumber !== filterBatchNumber) return false;
 
-      // 3. Tìm kiếm theo Lô thuốc hoặc Tên thuốc
+      // 3. Tìm kiếm theo Lô   hoặc Tên  
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
         const matchBatchNum = batch.batchNumber.toLowerCase().includes(q);
@@ -111,7 +111,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                 Chưa liên kết với Google Sheet
               </div>
               <p className="text-xs text-amber-800/80 mt-0.5">
-                Vui lòng liên kết với Google Sheet trước khi thêm lô thuốc để dữ liệu được lưu trữ tự động.
+                Vui lòng liên kết với Google Sheet trước khi thêm lô   để dữ liệu được lưu trữ tự động.
               </p>
             </div>
           </div>
@@ -129,12 +129,12 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
       {/* 3 THẺ THỐNG KÊ NHÃN (BẤM VÀO THẺ ĐỂ LỌC TRỰC TIẾP)      */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* 1. Tổng số lô thuốc */}
+        {/* 1. Tổng số lô   */}
         <div
           onClick={() => setFilterLabel('all')}
           className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'all'
-              ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
-              : 'bg-white text-slate-800 border-slate-200/90 hover:border-slate-400'
+            ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
+            : 'bg-white text-slate-800 border-slate-200/90 hover:border-slate-400'
             }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -146,8 +146,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
             </span>
             <div
               className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'all'
-                  ? 'bg-slate-800 text-white'
-                  : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
+                ? 'bg-slate-800 text-white'
+                : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
                 }`}
             >
               <Package size={20} />
@@ -174,8 +174,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
         <div
           onClick={() => setFilterLabel('green')}
           className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'green'
-              ? 'bg-emerald-800 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
-              : 'bg-white text-slate-800 border-emerald-200/90 hover:border-emerald-400'
+            ? 'bg-emerald-800 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
+            : 'bg-white text-slate-800 border-emerald-200/90 hover:border-emerald-400'
             }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -187,8 +187,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
             </span>
             <div
               className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'green'
-                  ? 'bg-emerald-700 text-white'
-                  : 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100'
+                ? 'bg-emerald-700 text-white'
+                : 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100'
                 }`}
             >
               <CheckCircle2 size={20} />
@@ -205,8 +205,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
           </div>
           <div
             className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${filterLabel === 'green'
-                ? 'border-emerald-700 text-emerald-200 font-semibold'
-                : 'border-emerald-100/60 text-emerald-700'
+              ? 'border-emerald-700 text-emerald-200 font-semibold'
+              : 'border-emerald-100/60 text-emerald-700'
               }`}
           >
             <span>{filterLabel === 'green' ? '✓ Đang lọc nhãn xanh' : 'Bấm để lọc nhãn xanh'}</span>
@@ -217,8 +217,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
         <div
           onClick={() => setFilterLabel('white')}
           className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'white'
-              ? 'bg-slate-700 text-white border-slate-700 shadow-md ring-2 ring-slate-700/20'
-              : 'bg-white text-slate-800 border-slate-300 hover:border-slate-500'
+            ? 'bg-slate-700 text-white border-slate-700 shadow-md ring-2 ring-slate-700/20'
+            : 'bg-white text-slate-800 border-slate-300 hover:border-slate-500'
             }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -230,8 +230,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
             </span>
             <div
               className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'white'
-                  ? 'bg-slate-600 text-white'
-                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                ? 'bg-slate-600 text-white'
+                : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                 }`}
             >
               <Circle size={20} />
@@ -248,8 +248,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
           </div>
           <div
             className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${filterLabel === 'white'
-                ? 'border-slate-600 text-slate-200 font-semibold'
-                : 'border-slate-100 text-slate-600'
+              ? 'border-slate-600 text-slate-200 font-semibold'
+              : 'border-slate-100 text-slate-600'
               }`}
           >
             <span>{filterLabel === 'white' ? '✓ Đang lọc nhãn trắng' : 'Bấm để lọc nhãn trắng'}</span>
@@ -262,7 +262,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
       {/* ======================================================== */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-4">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          {/* 1. Lọc theo Lô thuốc (Dropdown chọn lô) */}
+          {/* 1. Lọc theo Lô   (Dropdown chọn lô) */}
           <div className="flex items-center gap-2 sm:w-64">
             <span className="text-xs font-bold text-slate-600 whitespace-nowrap">Lọc theo lô:</span>
             <select
@@ -300,7 +300,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo Lô thuốc hoặc Tên thuốc..."
+              placeholder="Tìm theo Lô   hoặc Tên  ..."
               className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm font-medium"
             />
           </div>
@@ -356,12 +356,12 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                       <div className="space-y-1">
                         <p className="font-bold text-slate-700 text-sm">
                           {batches.length === 0
-                            ? 'Chưa có lô thuốc nào'
-                            : 'Không tìm thấy lô thuốc nào phù hợp với bộ lọc'}
+                            ? 'Chưa có lô   nào'
+                            : 'Không tìm thấy lô   nào phù hợp với bộ lọc'}
                         </p>
                         <p className="text-xs text-slate-400 max-w-md mx-auto">
                           {batches.length === 0
-                            ? 'Hãy liên kết với Google Sheet và nhấn "+ Thêm lô thuốc" để bắt đầu ghi nhận.'
+                            ? 'Hãy liên kết với Google Sheet và nhấn "+ Thêm lô  " để bắt đầu ghi nhận.'
                             : 'Hãy thử đổi điều kiện lọc theo lô hoặc nhãn để hiển thị kết quả.'}
                         </p>
                       </div>
@@ -396,7 +396,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                       {index + 1}
                     </td>
 
-                    {/* 2. Lô thuốc */}
+                    {/* 2. Lô   */}
                     <td className="py-3.5 px-4">
                       <button
                         type="button"
@@ -407,7 +407,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                       </button>
                     </td>
 
-                    {/* 3. Tên thuốc thuộc lô đó */}
+                    {/* 3. Tên   thuộc lô đó */}
                     <td className="py-3.5 px-4 font-semibold text-slate-800 text-xs sm:text-sm">
                       {batch.batchName}
                     </td>
@@ -445,7 +445,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                           type="button"
                           onClick={() => onDeleteBatch(batch)}
                           className="p-1.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
-                          title="Xóa lô thuốc"
+                          title="Xóa lô  "
                         >
                           <Trash2 size={16} />
                         </button>
