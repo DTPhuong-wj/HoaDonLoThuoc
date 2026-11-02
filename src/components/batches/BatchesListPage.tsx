@@ -132,26 +132,23 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
         {/* 1. Tổng số lô thuốc */}
         <div
           onClick={() => setFilterLabel('all')}
-          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${
-            filterLabel === 'all'
+          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'all'
               ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
               : 'bg-white text-slate-800 border-slate-200/90 hover:border-slate-400'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between mb-3">
             <span
-              className={`text-xs font-bold uppercase tracking-wider ${
-                filterLabel === 'all' ? 'text-slate-300' : 'text-slate-500'
-              }`}
+              className={`text-xs font-bold uppercase tracking-wider ${filterLabel === 'all' ? 'text-slate-300' : 'text-slate-500'
+                }`}
             >
-              Tổng số lô thuốc
+              Tổng số lô
             </span>
             <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
-                filterLabel === 'all'
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'all'
                   ? 'bg-slate-800 text-white'
                   : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
-              }`}
+                }`}
             >
               <Package size={20} />
             </div>
@@ -159,17 +156,15 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-extrabold">{batches.length}</span>
             <span
-              className={`text-xs font-medium ${
-                filterLabel === 'all' ? 'text-slate-300' : 'text-slate-400'
-              }`}
+              className={`text-xs font-medium ${filterLabel === 'all' ? 'text-slate-300' : 'text-slate-400'
+                }`}
             >
-              lô thuốc
+              lô
             </span>
           </div>
           <div
-            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${
-              filterLabel === 'all' ? 'border-slate-800 text-emerald-400 font-semibold' : 'border-slate-100 text-slate-500'
-            }`}
+            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${filterLabel === 'all' ? 'border-slate-800 text-emerald-400 font-semibold' : 'border-slate-100 text-slate-500'
+              }`}
           >
             <span>{filterLabel === 'all' ? '✓ Đang xem tất cả nhãn' : 'Bấm để xem tất cả'}</span>
           </div>
@@ -178,26 +173,23 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
         {/* 2. Tổng lô có nhãn xanh */}
         <div
           onClick={() => setFilterLabel('green')}
-          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${
-            filterLabel === 'green'
+          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'green'
               ? 'bg-emerald-800 text-white border-emerald-800 shadow-md ring-2 ring-emerald-700/20'
               : 'bg-white text-slate-800 border-emerald-200/90 hover:border-emerald-400'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between mb-3">
             <span
-              className={`text-xs font-bold uppercase tracking-wider ${
-                filterLabel === 'green' ? 'text-emerald-100' : 'text-emerald-800'
-              }`}
+              className={`text-xs font-bold uppercase tracking-wider ${filterLabel === 'green' ? 'text-emerald-100' : 'text-emerald-800'
+                }`}
             >
               Tổng lô có nhãn xanh
             </span>
             <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
-                filterLabel === 'green'
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'green'
                   ? 'bg-emerald-700 text-white'
                   : 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100'
-              }`}
+                }`}
             >
               <CheckCircle2 size={20} />
             </div>
@@ -205,19 +197,17 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-extrabold">{greenCount}</span>
             <span
-              className={`text-xs font-medium ${
-                filterLabel === 'green' ? 'text-emerald-100' : 'text-emerald-600'
-              }`}
+              className={`text-xs font-medium ${filterLabel === 'green' ? 'text-emerald-100' : 'text-emerald-600'
+                }`}
             >
               lô (Nhãn xanh)
             </span>
           </div>
           <div
-            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${
-              filterLabel === 'green'
+            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${filterLabel === 'green'
                 ? 'border-emerald-700 text-emerald-200 font-semibold'
                 : 'border-emerald-100/60 text-emerald-700'
-            }`}
+              }`}
           >
             <span>{filterLabel === 'green' ? '✓ Đang lọc nhãn xanh' : 'Bấm để lọc nhãn xanh'}</span>
           </div>
@@ -226,26 +216,23 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
         {/* 3. Tổng lô có nhãn trắng */}
         <div
           onClick={() => setFilterLabel('white')}
-          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${
-            filterLabel === 'white'
+          className={`cursor-pointer p-5 rounded-3xl border transition-all shadow-2xs group ${filterLabel === 'white'
               ? 'bg-slate-700 text-white border-slate-700 shadow-md ring-2 ring-slate-700/20'
               : 'bg-white text-slate-800 border-slate-300 hover:border-slate-500'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between mb-3">
             <span
-              className={`text-xs font-bold uppercase tracking-wider ${
-                filterLabel === 'white' ? 'text-slate-200' : 'text-slate-700'
-              }`}
+              className={`text-xs font-bold uppercase tracking-wider ${filterLabel === 'white' ? 'text-slate-200' : 'text-slate-700'
+                }`}
             >
               Tổng lô có nhãn trắng
             </span>
             <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
-                filterLabel === 'white'
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${filterLabel === 'white'
                   ? 'bg-slate-600 text-white'
                   : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
-              }`}
+                }`}
             >
               <Circle size={20} />
             </div>
@@ -253,19 +240,17 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-extrabold">{whiteCount}</span>
             <span
-              className={`text-xs font-medium ${
-                filterLabel === 'white' ? 'text-slate-200' : 'text-slate-500'
-              }`}
+              className={`text-xs font-medium ${filterLabel === 'white' ? 'text-slate-200' : 'text-slate-500'
+                }`}
             >
               lô (Nhãn trắng)
             </span>
           </div>
           <div
-            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${
-              filterLabel === 'white'
+            className={`mt-3 pt-3 border-t text-xs flex items-center justify-between ${filterLabel === 'white'
                 ? 'border-slate-600 text-slate-200 font-semibold'
                 : 'border-slate-100 text-slate-600'
-            }`}
+              }`}
           >
             <span>{filterLabel === 'white' ? '✓ Đang lọc nhãn trắng' : 'Bấm để lọc nhãn trắng'}</span>
           </div>
@@ -353,8 +338,8 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
             <thead>
               <tr className="bg-slate-50/80 text-slate-500 font-bold border-b border-slate-200/80 uppercase text-[11px] tracking-wider">
                 <th className="py-3.5 px-4 text-center w-16">stt</th>
-                <th className="py-3.5 px-4">lô thuốc</th>
-                <th className="py-3.5 px-4">tên thuốc</th>
+                <th className="py-3.5 px-4">lô</th>
+                <th className="py-3.5 px-4">tên</th>
                 <th className="py-3.5 px-4 text-center">nhãn</th>
                 <th className="py-3.5 px-4 text-center">ngày nhập</th>
                 <th className="py-3.5 px-4 text-right">thao tác</th>
@@ -396,7 +381,7 @@ export const BatchesListPage: React.FC<BatchesListPageProps> = ({
                             onClick={onOpenCreateBatch}
                             className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors"
                           >
-                            + Thêm lô thuốc
+                            + Thêm lô
                           </button>
                         </div>
                       )}

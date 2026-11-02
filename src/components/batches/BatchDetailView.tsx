@@ -81,7 +81,7 @@ export const BatchDetailView: React.FC<BatchDetailViewProps> = ({
             </div>
             <div>
               <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                Chi tiết Lô thuốc
+                Chi tiết Lô
               </div>
               <h2 className="text-2xl font-extrabold text-slate-900 font-mono">
                 {batch.batchNumber}
@@ -98,7 +98,7 @@ export const BatchDetailView: React.FC<BatchDetailViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-              1. Lô thuốc
+              1. Lô
             </div>
             <div className="text-base font-extrabold text-slate-800 font-mono">
               {batch.batchNumber}

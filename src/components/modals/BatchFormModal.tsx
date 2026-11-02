@@ -94,13 +94,13 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
     e.preventDefault();
 
     if (!batchNumber.trim()) {
-      setError('Vui lòng nhập Lô thuốc');
+      setError('Vui lòng nhập Lô');
       return;
     }
 
     const validNames = medicineNames.map((n) => n.trim()).filter((n) => n.length > 0);
     if (validNames.length === 0) {
-      setError('Vui lòng nhập ít nhất 1 Tên thuốc');
+      setError('Vui lòng nhập ít nhất 1 Tên');
       return;
     }
 
@@ -128,12 +128,12 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold">
-                {batchToEdit ? 'Chỉnh sửa dòng thuốc' : 'Thêm Lô thuốc Mới'}
+                {batchToEdit ? 'Chỉnh sửa dòng ' : 'Thêm Lô  Mới'}
               </h3>
               <p className="text-xs text-emerald-100">
                 {batchToEdit
-                  ? 'Cập nhật thông tin dòng thuốc'
-                  : 'Tên thuốc được tách riêng từng dòng trên Sheet để dễ quản lý'}
+                  ? 'Cập nhật thông tin dòng '
+                  : 'Tên được tách riêng từng dòng trên Sheet để dễ quản lý'}
               </p>
             </div>
           </div>
@@ -158,7 +158,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
           {/* 1. Lô thuốc */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-              <span>Lô thuốc</span>
+              <span>Lô</span>
               <span className="text-rose-500">*</span>
             </label>
             <input
@@ -178,7 +178,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                <span>Tên thuốc (tách riêng từng dòng)</span>
+                <span>Tên (tách riêng từng dòng)</span>
                 <span className="text-rose-500">*</span>
               </label>
               {!batchToEdit && (
@@ -188,7 +188,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
                   className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline"
                 >
                   <Plus size={14} />
-                  <span>+ Thêm tên thuốc</span>
+                  <span>+ Thêm tên</span>
                 </button>
               )}
             </div>
@@ -223,7 +223,7 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
 
             {!batchToEdit && (
               <p className="text-[11px] text-slate-400">
-                Mỗi tên thuốc sẽ được lưu thành <strong>1 dòng riêng biệt</strong> trên Google Sheet với cùng lô thuốc này.
+                Mỗi tên sẽ được lưu thành <strong>1 dòng riêng biệt</strong> trên Google Sheet với cùng lô thuốc này.
               </p>
             )}
           </div>
@@ -238,16 +238,14 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => setLabelColor('green')}
-                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${
-                  labelColor === 'green'
+                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${labelColor === 'green'
                     ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900 shadow-xs'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                    labelColor === 'green' ? 'text-emerald-600' : 'text-slate-300'
-                  }`}
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${labelColor === 'green' ? 'text-emerald-600' : 'text-slate-300'
+                    }`}
                 >
                   <CheckCircle2 size={20} />
                 </div>
@@ -260,16 +258,14 @@ export const BatchFormModal: React.FC<BatchFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => setLabelColor('white')}
-                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${
-                  labelColor === 'white'
+                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition-all text-left ${labelColor === 'white'
                     ? 'border-slate-800 bg-slate-50 text-slate-900 shadow-xs'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                    labelColor === 'white' ? 'text-slate-800' : 'text-slate-300'
-                  }`}
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${labelColor === 'white' ? 'text-slate-800' : 'text-slate-300'
+                    }`}
                 >
                   <Circle size={20} />
                 </div>
